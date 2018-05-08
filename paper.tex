@@ -1,321 +1,76 @@
 \author{Team: Circle}
 %%%%%%%%%%%%%%%%%%%%%%%%
-\title{GEO 365N/384S Seismic Data Processing \\ Computational Assignment 6}
+\title{GEO 365N/384S Seismic Data Processing \\ Final Project}
 
 \begin{abstract}
-In this assignment, you will experiment with different kinds of depth migration:
-  \begin{enumerate}
-  \item Post-stack phase-shift (Gazdag) migration and its approximation by Stolt stretch.
-  \item Prestack Kirchhoff migration.
-  \item Post-stack reverse-time migration (RTM).
-  \end{enumerate}
-Migration will be applied to previously processed datasets: Viking Graben and Teapot Dome data.
+
+In the final project, we process a 2D seismic line collected near the coast of Japan, over the Nankai trough. We go through processing steps from raw data to surface-consistent correction, CMP sorting, gain, spherical divergence correction, velocity analysis, NMO, DMO, stack, and migration.
+  
 \end{abstract}
 
-\section{Prerequisites}
+\section{Data overview}
+\inputdir{project}
 
-The homework code is available from the class repository
-by running
-\begin{verbatim}
-svn co https://github.com/UT-GEO384S/geo384s/trunk/hw6
-\end{verbatim}
-You can also download it from your team's private repository.
+\subsection{Geology}
 
-\section{Generating this document}
-
-At any point of doing this computational assignment, you can
-regenerate this document and display it on your screen.
-
-\begin{enumerate}          
-\item Change directory to \texttt{hw6}:
-\begin{verbatim}
-cd hw6
-\end{verbatim}
-\item Run
-\begin{verbatim}
-sftour scons lock
-scons read &
-\end{verbatim}
+\begin{enumerate}
+\item The data were collected near the coast of Japan, over the Nankai trough, where the Philippines plate is subducting beneath Eurasia.
 \end{enumerate}
 
-As the first step, open \texttt{hw6/paper.tex} file in your favorite
-editor and edit the first line to enter the name of your team. Then
-run \texttt{scons read} again.
+\subsection{First look at data}
 
-\section{Phase-shift migration}
-\inputdir{gazdag}
+\begin{enumerate}
+\item The data were collected by the University of Texas, the University of Tulsa, and the University of Tokyo. The original data is in SU, so we convert it to RSF files.
+\item There are two data files: shot-ordered gathers (Figure~\ref{fig:shots}) and published stacked data (Figure~\ref{fig:stackd}). The data were collected in very deep water, approximate 6 seconds two-way travel time, which is 4.5 km if the water velocity is 1500 m/s. The shot-gather data has 326 shot gathers with 19057 traces. The total time length of a trace is 11 seconds with the sample interval of 0.002 seconds. The published stacked data has 2250 traces with total time length of 11 seconds and 0.004 seconds sample interval. The shot-gathers data has 401 CMPs while the stacked data is the output of 2869 CMPs. Therefore, the shot-gather file is a subset of stacked data.  
+\item The number of traces per shot gather is Figure~\ref{fig:smask}. The first shot gather, 1687, has one trace, then the number of traces per gather increases to a maximum of 69 at gather 1735 and keeps constant through gather 1965. After gather 1965, the number of traces per gather decreases to 1 at the last gather, 2012. There are missing traces at some shot-gathers, for example at gather 1707 (Figure~\ref{fig:shot}). The average frequency spectra of shot gathers is Figure~\ref{fig:spectra}. Our data has low frequencies smaller than 10 Hz that need to be filtered. We later followed the example of the published dataset to resample the file from 2 ms to 4 ms sample interval to reduce our prestack processing load by half. The Nyquist frequency of 4 ms sample interval is 125 Hz. Typical seismic data has good high frequency content up to around 50-70 Hz, above this are usually noise. Therefore, we filtered high frequencies above 125 Hz to prevent aliasing and remove noise.    
 
-In the first part of the assignment, we will return to processing 3D land data, the Teapot Dome dataset.
+\plot{stackd}{width=0.8\textwidth}{Published stacked data.}  
+\plot{smask}{width=0.8\textwidth}{Number of traces per shot-gather.}  
+\plot{shot}{width=0.8\textwidth}{Shot-gather 1707.}
+
+\end{enumerate}
+
+\section{Surface-consistent}
 
 \begin{enumerate}
 
-\item Change directory to \texttt{hw6/gazdag}.
-\item Run
-\begin{verbatim}
-scons -c
-\end{verbatim}
-to remove (clean) previously generated files.
+\item The first step is to do surface-consistent amplitude balancing. Typical seismic instruments introduce significant dirrect current (DC) offset that is effectively added to the desired signal from the sensor. We removed DC offset from the shot gathers data to facilitate processing and analysis of data (Figure~\ref{fig:shotsdc}). We then filtered the low frequency in the data (Figure~\ref{fig:shotsf}).
 
-\item To simplify the processing, we will use a single velocity function assuming a laterally homogeneous medium. This velocity can be picked from a supergather combining traces from different locations. Figure~\ref{fig:vscan} shows the semblance scan using every 500th trace in the data and the corresponding picked NMO velocity trend. To reproduce it on your screen, run
-\begin{verbatim}
-scons vscan.view
-\end{verbatim}
+\item We created a mask to remove zero traces and calculated trace amplitudes of the shot gathers displayed in shot-offset coordinates (Figure~\ref{fig:varms}). The stripes in the amplitude might be caused by near-surface conditions in deploying sources and receivers. The horizontal stripes come from offset term (Figure~\ref{fig:off}). The vertical stripes come from shot term (Figure~\ref{fig:sht}). The diagonal stripes come from the CMP and receiver terms (Figure~\ref{fig:rcv} and Figure~\ref{fig:cmp}). After running iterative inversion, the stripes are predicted (Figure~\ref{fig:recvvscarms}. The shot gathers after the surface-consistent amplitude correction is the right figure in Figure~\ref{fig:shotsfc}.          
 
-\plot{vscan}{width=0.8\textwidth}{Semblance scan of a supergather (every 500th trace) from the Teapot Dome dataset. The curve shows the picked velocity trend.}
+\multiplot{3}{shots,shotsdc,shotsf}{width=0.5\textwidth}{(a) Raw shot gathers (b) Shot gathers after DC removal. (c) Shot gathers after filtering low frequencies.}  
+\multiplot{2}{spectra,spectraf}{width=0.8\textwidth}{(a) Raw data frequency spectra. (b) Frequency spectra after filtering low frequencies.}
+\multiplot{4}{off,sht,rcv,cmp}{width=0.45\textwidth}{Estimated surface-consistent factors.} 
+\multiplot{3}{varms,recvvscarms,recvadiff}{width=0.3\textwidth}{Trace amplitudes from the data. (a) Initial. (b) Estimated surface-consistent. (c) Difference.}
+\plot{shotsfc}{width=0.8\textwidth}{(a) Raw shot gathers (b) Shot gathers after surface-consistent amplitude correction.}
 
-\sideplot{velocity}{width=\textwidth}{Interval velocity in the Teapot Dome dataset estimated by Dix inversion (regularized by smoothing). The dashed curve shows the corresponding picked RMS velocity.}
+\end{enumerate}
 
-\item In the next step, we will treat the NMO velocity as the RMS velocity and convert it to interval velocity using Dix inversion \cite[]{GEO20-01-00680086}. To display the result (Figure~\ref{fig:velocity}), run
-\begin{verbatim}
-scons velocity.view
-\end{verbatim}
-To avoid instabilities, Dix inversion is assisted by smoothing regularization.
-\item Using the picked NMO velocity, we can apply NMO stacking to create a 3D stacked cube (Figure~\ref{fig:stack}). To display it on your screen, run
-\begin{verbatim}
-scons stack.view
-\end{verbatim}
+\section{CMP sorting}
 
-\plot{stack}{width=0.8\textwidth}{Stack of the Teapot Dome dataset.}
-
-\item The stack in Figure~\ref{fig:stack} covers a region with an irregular shape. For further processing, we will select a portion of the data and rotate it to align with the axes (Figure~\ref{fig:stack2}). To perform windowing and rotation, run
-\begin{verbatim}
-scons stack2.view
-\end{verbatim}
-
-\item A depth migration method designed specifically for laterally-invariant $V(z)$ velocity distributions is phase-shift migration, also known as Gazdag migration \cite[]{GEO43-07-13421351}. The phase-shift method extrapolates the recorded wavefield in depth.
-
-Applying the Fourier transform in time and in lateral spatial directions to the wave equation turns it into an
-ordinary differential equation
-\begin{equation}
-\label{eq:kwave}
-\frac{d^2 \hat{U}}{d z^2} + \lambda^2\,\hat{U} = 0\;,
-\end{equation}
-where $U(\omega,\mathbf{k},z)$ is the wavefield corresponding to temporal frequency $\omega$, lateral wavenumber $\mathbf{k}$, and depth $z$, and
-\[
-\lambda^2 = \frac{\omega^2}{V^2(z)} - \mathbf{k} \cdot
-\mathbf{k}
-\]
-Equation~(\ref{eq:kwave}) admits a depth-stepping solution
-\begin{equation}
-\label{eq:ps}
-\hat{U}(z+\Delta z,\mathbf{k},\omega) = \hat{U}(z,\mathbf{k},\omega)\,e^{\pm i\,\lambda\,\Delta z}\;,
-\end{equation}
-which is the basis of the phase-shift method.
-
-To generate a 3D phase-shift migration of the stack in Figure~\ref{fig:stack}, run
-\begin{verbatim}
-scons image.view
-\end{verbatim}
-The computation proceeds in the vertical time coordinates, with the result displayed on the same grid as the input. To compare the data before and after migration, run
-\begin{verbatim}
-sfpen Fig/stack2.vpl Fig/image.vpl
-\end{verbatim}
-Do you observe notable differences? The reflectors are in the correct positions and are clearer. The diffractions collapse.  
-
-\multiplot{2}{stack2,image}{width=0.8\textwidth}{Portion of the rotated Teapot Dome stack (a) and its migration by the phase-shift method displayed in vertical time (b).}
-
-\item Rewrite equations~(\ref{eq:kwave}) and~(\ref{eq:ps}) using the vertical time coordinate 
-\[
-\tau = \int\limits_{0}^{z} \frac{2\,d\zeta}{V(\zeta)}
-\]
-instead of $z$. 
-
-\answer
-{We have: \[\tau = \int\limits_{0}^{z} \frac{2\,d\zeta}{V(\zeta)}\]\\
-So: \[d\tau = \frac{2\,d\zeta}{V(\zeta)}\]\\
-So: \[\frac{d^2 \hat{U}}{d z^2} = \frac{d^2 \hat{U}}{d \tau^2}\,\frac{d \tau^2}{d z^2} = \frac{4}{v^2}\,\frac{d^2 \hat{U}}{d t^2}\]\\
-So: \[\frac{d^2 \hat{U}}{d z^2} + \lambda^2\,\hat{U} = \frac{4}{V^2}\,\frac{d^2 \hat{U}}{d t^2} + \frac{\omega^2}{V^2(z)} - \mathbf{k} \cdot \mathbf{k} = 0\]\\
-So: \[\frac{d^2 \hat{U}}{d t^2} + (\frac{\omega^2 - (\mathbf{k} \cdot \mathbf{k})\,V^2}{4}) \hat{U} = 0\]\\
-So: \[\hat{U}(t+\Delta t,\mathbf{k},\omega) = \hat{U}(z,\mathbf{k},\omega)\,e^{\pm i\,\lambda\,\Delta z}\]\\
-\[\lambda^2 = \frac{\omega^2 - (\mathbf{k} \cdot \mathbf{k})\,V^2}{4}\]        
-}
-
-Which sign (plus or minus) should be used in
-equation~(\ref{eq:ps}) for post-stack migration?
-
-\answer{For positive frequencies, (+) sign represents downward propagation, (-) sign represents upward propagation.}
-
-\multiplot{2}{mig10,migst}{width=0.8\textwidth}{Portion of the rotated Teapot Dome stack migrated using Stolt migration. (a) Using a constant velocity of 10 kft/s. (b) Using the Stolt stretch method.}
-
-\item In the classic paper, \cite{GEO50-11-22192244} proposed not only a Fourier-domain method for a constant-velocity migration but also an effective method for approximating the output of phase-shift migration in a $V(z)$ medium. The method became known as \emph{Stolt stretch}. It consists of three steps:
 \begin{enumerate}
-\item Stretching the data in time by transforming from time $t$ to stretched time $t_s$ according to
-\begin{equation}
-t_s(t)={\left(\frac{2}{V_0^2}\,\int\limits_0^t \tau\,V_r(\tau) d \tau\right)}^{1/2}\;,
-\label{eqn:ss} 
-\end{equation}
-where $V_0$ is a reference constant velocity, and $V_r(t)$ is the RMS velocity:
-\[ 
-V_r(t) = \frac{1}{t} \int\limits_0^t V^2(\tau) d \tau\;.
-\]
-\item Performing Stolt migration according to mapping
-\begin{equation}
-\omega = 
-\left(1-\frac{1}{W}\right) \omega_0+
-\frac{\omega_0}{W}\,
-\sqrt{1 + W\,\frac{V_0^2 k^2}{4\,\omega_0^2}}\;,
-\label{eqn:sdispersion} 
-\end{equation}
-where $W$ is a constant (typically between 1 and 2).
 
-\item Inverse stretch (squeeze) from $t_s$ to $t$.
-\end{enumerate} 
+\item The data was resampled to 4 ms sample interval and applied spherical divergence correction (Figure~\ref{fig:shots2}). We then sorted the data to CMP (Figure~\ref{fig:cmps}). The fold values of data is Figure~\ref{fig:cmask}. We have 401 CMPs but the first CMPs are not full fold. The first full-fold CMP gather is CMP 933 with 48 traces.
 
-Figure~\ref{fig:mig10} shows the result of Stolt migration without stretch and using velocity of 10 kft/s. Figure~\ref{fig:migst} is the result of Stolt migration using the stretch approach. To display these figures on your screen, run
-\begin{verbatim}
-scons mig10.view migst.view
-\end{verbatim}
-
-\item How much faster is Stolt migration compared to Gazdag migration? 
-
-You can compare the CPU time of different methods experimentally by
-running \texttt{scons TIMER=y} instead of \texttt{scons}.
-
-\answer{Stolt migration is faster. Stolt migration only takes 5 seconds while Gazdag migration takes 2.5 minutes.}
-
-\item How accurate is Stolt stretch in approximating the output of Gazdag migration? You can compare the results by running
-\begin{verbatim}
-sfpen Fig/image.vpl Fig/migst.vpl
-\end{verbatim}
-
-The Stolt Migration with Stolt Stretch is good in approximating the output of Gazdag migration but the diffractions do not collapse completely.
-
-Try improving the match by modifying the value of the Stolt-stretch parameter $W$ from the value of $W=1.5$. You can find a better value by experimentation or by using the appropriate theory \cite[]{stoltst}.
-
-We changed the Stolt-stretch parameter $W=0.6$. Figure~\ref{fig:migst2} is the result of Stolt migration using our Stolt-stretch parameter.
-
-\multiplot{2}{migst,migst2}{width=0.8\textwidth}{Portion of the rotated Teapot Dome stack migrated using Stolt stretch method. (a) W=1.5. (b) W=0.6.}
-
-\item (\textbf{EXTRA CREDIT}) For an extra credit, try improving the imaging result by using a more detailed velocity analysis or a more accurate migration method.
-
-We used the split-step migration method to account for latterally variations in velocity \cite[]{splitstep}.
+\plot{shots2}{width=0.8\textwidth}{Shot gathers after resampling.}
+\plot{cmps}{width=0.8\textwidth}{CMP gathers.}
+\plot{cmask}{width=0.8\textwidth}{Fold values of data.}    
  
-We changed the Dix interval velocity from time to depth (Figure~\ref{fig:Vint3Dz}). We then calculated the slowness (Figure~\ref{fig:slo}). 
-The result after doing split-step migration is Figure~\ref{fig:mig}.
-
-\plot{Vint3Dz}{width=0.8\textwidth}{Interval velocity in depth.}
-\plot{slo}{width=0.8\textwidth}{Slowness.}
-\multiplot{2}{migst2,mig}{width=0.8\textwidth}{Portion of the rotated Teapot Dome stack migrated (a) using Stolt stretch method (b) Using Split-step method.}
-
 \end{enumerate}
 
-\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,title=gazdag/SConstruct]{gazdag/SConstruct}
-
-\section{Reverse-time migration}
-\inputdir{rtm}
-
-In this part of the assignment, we will create a depth image of the
-Viking Graben data using post-stack reverse-time migration (RTM).
+\section{Velocity analysis, NMO, and stack}
 
 \begin{enumerate}
 
-\item Change directory to \texttt{hw6/rtm}.
-\item Run
-\begin{verbatim}
-scons -c
-\end{verbatim}
-to remove (clean) previously generated files.
-\item We start by reproducing the DMO processing workflow from Assignment 3 using the recipe from Team \emph{Signal}. A picked DMO (time-migration) velocity distribution is shown in Figure~\ref{fig:vdix}. To reproduce it on your screen, run
-\begin{verbatim}
-scons vdix.view
-\end{verbatim}
-\item The next step is converting the time-migration velocity to depth for creating an initial velocity model for depth migration.  To display the Dix-converted velocity in time and depth (Figure~\ref{fig:vdix,vofz}), run
-\begin{verbatim}
-scons vdix.view vofz.view
-\end{verbatim}
-\item The DMO stack (Figure~\ref{fig:slice}) can be used as the input to post-stack depth migration. We will use reverse-time migration by the lowrank approximation method \cite[]{lowrank}. The method employs several (in this case, three) spatial Fourier transforms per time step. To generate the result (Figure~\ref{fig:rtm}), run
-\begin{verbatim}
-scons rtm.view
-\end{verbatim}
-To watch a movie of reverse-time wave propagation which produced the image in Figure~\ref{fig:rtm}, run
-\begin{verbatim}
-scons snaps.vpl
-\end{verbatim}
-\item Your task: try to improve the quality of the image by 
-\begin{enumerate}
-\item using the results from your own time-domain imaging (Assignments 1--5);
-\item modifying the time-to-depth conversion step.
+\item We examined CMP gather 1280 (Figure~\ref{fig:cmp1}). We did velocity analysis using semblance scan and automatically pick the velocity (Figure~\ref{fig:vscan}). We then applied NMO to flatten the events (Figure~\ref{fig:nmo1}).   
+
+\plot{vscan}{width=0.8\textwidth}{Velocity analysis for CMP 1280.}
+\plot{nmo1}{width=0.8\textwidth}{NMO for CMP 1280.}
+
+ 
 \end{enumerate}
-
-The stack after Parabolic Radon demultiple is Figure~\ref{fig:pagc1s}.
-
-The RTM migration result is Figure~\ref{fig:rtm2}.
-
-\plot{vpick}{width=0.8\textwidth}{Picked DMO (time-migration) velocity in the Viking Graben dataset.}
-
-\multiplot{2}{vdix,vofz}{width=0.8\textwidth}{Interval velocity estimated by Dix inversion in vertical time (a) and depth (b).}
-
-\multiplot{2}{slice,rtm}{width=0.8\textwidth}{DMO stack of the Viking Graben dataset (a) and its depth migration by RTM (b).}
-
-\multiplot{2}{pagc1s,rtm2}{width=0.8\textwidth}{Stack after Parabolic Radon demultiple (a) and its depth migration by RTM (b).}
-
-\end{enumerate}
-
-\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,title=rtm/SConstruct]{rtm/SConstruct}
-
-\section{Kirchhoff migration}
-\inputdir{kirchhoff}
-
-How accurate is the image in Figure~\ref{fig:rtm}? We can evaluate it
-by performing prestack depth migration (PSDM). In this part of the
-assignment, we will image the same dataset using prestack Kirchhoff
-depth migration method.
-
-\plot{shots}{width=0.75\textwidth}{Preprocessed shot gathers from the Teapot Dome dataset.}
-
-\plot{psdm}{width=0.8\textwidth}{Kirchoff prestack depth migration of the Teapot Dome dataset (using every 10th shot).}
-
-\begin{enumerate}
-
-\item Change directory to \texttt{hw6/kirchhoff}.
-\item Run
-\begin{verbatim}
-scons -c
-\end{verbatim}
-to remove (clean) previously generated files.
-\item For the prestack migration exercise, we will use the same input as in the previous section but resort it into shot gathers (Figure~\ref{fig:shots}). To display the data on your screen, run
-\begin{verbatim}
-scons shots.view
-\end{verbatim}
-\item The first step in the Kirchhoff method is computing traveltime tables. To display the computed table on your screen (as a movie over source locations), run
-\begin{verbatim}
-scons times.vpl
-\end{verbatim}
-In addition to traveltimes themselves, we compute the traveltime
-derivatives with respect to the source and receiver
-locations \cite[]{eikods}.
-\item To compute and display the PSDM image (Figure~\ref{fig:psdm}), run 
-\begin{verbatim}
-scons psdm.view
-\end{verbatim}
-Caution: this computation is expensive and may take some time.
-
-\item Your task: replace input data with the result of your processing (parabolic Radon demultiple) from the Computational Assignment 5 and compare the results.
-
-\item (\textbf{EXTRA CREDIT}) For an extra credit, replace \texttt{cig=n} with \texttt{cig=y} in the \texttt{SConstruct} file to generate CIGs (Common Image Point Gathers) instead of a stacked migration image. Examine the flatness of the gathers as an indication of the velocity model correctness. Can you improve the image by updating the velocity model or processing the gathers?
-
-The CIGs from Pre-stack Kirchhoff migration is Figure~\ref{fig:psdmc}. The gathers are quite flat but there are still some non-flat areas because of wrong velocities Figure~\ref{fig:psdmcw}.
-
-\plot{psdmc}{width=0.75\textwidth}{Common Image Point Gathers from Pre-stack Kirchhoff migration.}
-
-\plot{psdmcw}{width=0.75\textwidth}{Windowed Common Image Point Gathers from Pre-stack Kirchhoff migration.}
-
-\end{enumerate}
-
-\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,title=kirchhoff/SConstruct]{kirchhoff/SConstruct}
-
-%\section{Saving your work}
-
-%It is important to save all files that you edit by hand (such
-%as \texttt{paper.tex} and \texttt{SConstruct}) in a version-control
-%system every time you make a revision.  The completed assignment is
-%due in two weeks and should be submitted through your team's private
-%GitHub repository.
 
 \bibliographystyle{seg}
-\bibliography{SEG,hw6}
+\bibliography{SEG}
 
 
