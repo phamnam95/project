@@ -1,7 +1,7 @@
 from rsf.tex import *
 
 End(use='amsmath,hyperref,listings',options='reproduce',
-    color='vpick vdix vofz vscan slo Vint3Dz',
+    color='ALL',
     include=r'''
 \newlength{\boxwidth}
 \setlength{\boxwidth}{\textwidth}
