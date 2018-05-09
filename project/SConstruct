@@ -31,7 +31,7 @@ Flow('stack-win','stackd','window min1=5')
 Plot('stackd','window j1=2 j2=2 | grey title=Stack label2=CMP')
 Plot('stack-win','window  j2=2 | grey title="Stack (Window)" label2=CMP')
 Plot('stack-shot','stack-win','window min2=900 max2=1300 | grey title="Part of stack corresponding to the shot file" label2=CMP') 
-
+Result('stack-shot','stack-win','window min2=900 max2=1300 | grey title="Part of stack corresponding to the shot file" label2=CMP') 
 Result('stackd','stackd stack-win','SideBySideAniso')
 
 ####### DC Removal
@@ -426,8 +426,8 @@ Flow('stackst','stacks','costaper nw3=20')
 
 Result('stacks','stackst',
        '''
-       byte gainpanel=all | transp plane=23 memsize=5000 |
-       grey3 frame1=400 frame2=50 frame3=200 point1=0.8 point2=0.8
+       window min1=5.5 max1=8.5 |byte gainpanel=all | transp plane=23 memsize=5000 |
+       grey3 frame1=200 frame2=100 frame3=50 point1=0.8 point2=0.8
        title="Constant-Velocity Stacks" label3=Velocity unit3=m/s
        label2="CMP Number"
        ''')
@@ -451,9 +451,16 @@ Flow('map','transp',
      math output="x1/sqrt(1+0.25*x3*x3*x1*x1/(x2*x2))" | 
      cut n2=1
      ''')
+Result('map',
+       '''
+       window j3=4 |
+       byte gainpanel=all allpos=y bar=bar.rsf | 
+       grey3 title="Fowler Map" label1=Velocity 
+       unit1=km/s label3=Wavenumber barlabel=Velocity barunit=km/s
+       frame1=20 frame2=500 frame3=20 color=x scalebar=y 
+       ''')
         
 Flow('fowler','transp map','iwarp warp=${SOURCES[1]} | transp')
-
 
 # Inverse Fourier transform
 
@@ -461,9 +468,9 @@ Flow('dmo','fowler','cosft sign1=-1 sign3=-1')
  
 Result('dmo',
        '''
-       put d3=1 o3=900 unit2='' label2=Trace | 
+       put d3=1 o3=900 unit2='' label2=Trace | window min1=5.5 max1=8.5 |
        byte gainpanel=all | transp plane=23 memsize=5000 |
-       grey3 frame1=400 frame2=50 frame3=200 point1=0.8 point2=0.8
+       grey3 frame1=200 frame2=100 frame3=50 point1=0.8 point2=0.8
        title="Constant-Velocity DMO Stacks" 
        label3=Velocity unit3=m/s 
        ''')
@@ -608,7 +615,7 @@ Flow('first','slice',
      '''
      put o2=0 d2=16.667 label2=Distance unit2=m o3=0 |
      cosft sign2=1 |
-     stolt vel=1400 
+     stolt vel=1500 
      ''')
 
 Flow('mig0','first',
@@ -619,12 +626,12 @@ Flow('mig0','first',
 
 Result('first','mig0',
        '''
-       grey title="Migration with 1400 m/s"
+       grey title="Migration with 1500 m/s"
        ''')
 
 Flow('velcon','first',
      '''
-     vczo nv=101 dv=10 v0=1400 verb=y |
+     vczo nv=101 dv=10 v0=1500 verb=y |
      window min1=5.5 max1=8.0 | 
      transp plane=23 memsize=1000 |
      cosft sign2=-1
@@ -670,7 +677,7 @@ Flow('stoltd','diff',
 
 Flow('velcond','stoltd',
      '''
-     vczo nv=101 dv=10 v0=1400 verb=y pad2=3000 |
+     vczo nv=101 dv=10 v0=1500 verb=y pad2=3000 |
      window min1=5.5 max1=8 | 
      transp plane=23 memsize=1000 |
      cosft sign2=-1
@@ -744,7 +751,7 @@ Flow('mig1','first',
      ''')
 Result('mig1',
        '''
-       window max1=8.5 min1=5.5 | grey title="Migration with 1400 m/s"
+       window max1=8.5 min1=5.5 | grey title="Migration with 1500 m/s"
        ''')
 Flow('weight','envelope vpick','slice pick=${SOURCES[1]}')
 Flow('vdix2','vpick weight',
@@ -783,24 +790,22 @@ Result('rtm',
 Plot('snaps','grey title=Snapshots gainpanel=all unit2=km',view=1)
 
 # Split-step
-#Flow('slo','vdixz','put d4=1 o4=1 o2=900 | transp | transp plane=23 | math #output="1/input"')
-#Result('slo',
-     #'''
-     #byte | sfgrey3 color=j frame1=50 frame2=150 frame3=50 flat=n title="Slowness"
-     #''')
-#Flow('fft2','slice','put d2=16.667 o2=900 | fft1 | transp plane=12 | transp plane=23')
-#Flow('mig','fft2 slo',
-     #'''
-     #zomig3 ompnth=0 mode=m --readwrite=y verb=y
-     #nrmax=1 slo=${SOURCES[1]} pmx=30 pmy=30
-     #''')
+Flow('slo','vdixz','put d4=1 o4=1 d2=0.016667 d1=0.005 d3=0.016667 | transp | transp plane=23 | math output="1/(input/1000)"')
+Result('slo',
+       '''
+       byte | sfgrey3 color=j frame1=150 frame2=150 frame3=150 flat=n title="Slowness"
+       ''')
+Flow('fft2','slice','put d2=0.016667 o2=0 d3=0.016667 | fft1 | transp plane=12 | transp plane=23')
+Flow('mig','fft2 slo',
+     '''
+     zomig3 ompnth=1 mode=m --readwrite=y verb=y
+     nrmax=10 slo=${SOURCES[1]} 
+     ''',split=[3,'omp',[0]],reduce='add')
 
-#Result('mig',
-       #'''
-       #put d2=1 o2=900 | byte gainpanel=all | transp plane=23 | transp plane=12 | 
-       #grey3 frame1=170 frame2=170 frame3=60 
-       #title="Split-step migration" 
-       #point1=0.7 point2=0.7 flat=n unit3=kft label3=Depth 
-       #''')
+Result('mig',
+       '''
+       put d1=1 o1=900 d3=5 | transp plane=23 | transp plane=12 | window min1=4000 max1=7000 | grey
+       title="Split-step migration" 
+       ''')
 
 End()
