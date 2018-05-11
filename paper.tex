@@ -4,65 +4,78 @@
 
 \begin{abstract}
 
-In the final project, we process a 2D seismic line collected near the coast of Japan, over the Nankai trough. We go through processing steps from raw data to surface-consistent correction, CMP sorting, gain, spherical divergence correction, velocity analysis, NMO, DMO, stack, and migration.
+In the final project, we processed a deep water 2D seismic line collected near the coast of Japan, over the Nankai Trough subduction zone. We went through the processing steps from raw data to surface-consistent correction, CMP sorting, gain, spherical divergence correction, velocity analysis, NMO, DMO, stack, and migration. The final processing result can be used for geologic interpretations.
   
 \end{abstract}
 
 \section{Data overview}
 \inputdir{project}
 
-\subsection{Geology}
+\subsection{Geology and data acquisition}
 
 \begin{enumerate}
-\item The data were collected near the coast of Japan, over the Nankai trough, where the Philippines plate is subducting beneath Eurasia.
-\end{enumerate}
+
+\item The data were collected near the coast of Japan, over the Nankai trough, where the Philippines plate is subducting beneath Eurasia. The Shikoku Basin section of the northern Philippine Sea plate has been subducting northwestward under southern Japan along the Nankai Trough (Figure~\ref{fig:geo}).
+
+\item 8 two-ship expanding spread profiles (ESPs), 6 split spread profile (SSPs), and 250 km of 96-channel, high-resolution multichannel seismic reflection (MCS) profiles were acquired in the Nankai Trough. Our 2D seismic line is NT62-8 in Figure~\ref{fig:acquisition}.
+
+\item The deformed sediments in the Nankai Trough consist of a terrigenous trench wedge overlying a Shikoku Basin sequence. Along line NT62-8 the trench sediments are less than 350m thick at the deformation front, and the trench wedge is about 12 km wide. The subduction-related deformation begins seaward of the base of the inner trench slope. The protothrust zone developed seaward of the first thrust is 2.5 km wide and is characterized by thickening and seaward tilting of the trench wedge (Figure~\ref{fig:stackd}). The decollement is localized near the top of the Shikoku Basin lower pelagic unit. There are thrusts after the protothrust zone (Figure~\ref{fig:stack-shot-interpret}).    
+
+\plot{geo}{width=0.8\textwidth}{Location of the Nankai Trough (Image from \cite{geo}).}
+\plot{acquisition}{width=0.8\textwidth}{Seismic acquisition (Image from \cite{geo}).}   
+\plot{stack-shot-interpret}{width=0.8\textwidth}{Geologic structure.}   
+
+\end{enumerate}\clearpage
 
 \subsection{First look at data}
 
 \begin{enumerate}
-\item The data were collected by the University of Texas, the University of Tulsa, and the University of Tokyo. The original data is in SU, so we convert it to RSF files.
-\item There are two data files: shot-ordered gathers (Figure~\ref{fig:shots}) and published stacked data (Figure~\ref{fig:stackd}). The data were collected in very deep water, approximate 6 seconds two-way travel time, which is 4.5 km if the water velocity is 1500 m/s. The shot-gather data has 326 shot gathers with 19057 traces. The total time length of a trace is 11 seconds with the sample interval of 0.002 seconds. The published stacked data has 2250 traces with total time length of 11 seconds and 0.004 seconds sample interval. The shot-gathers data has 401 CMPs while the stacked data is the output of 2869 CMPs. Therefore, the shot-gather file is a subset of stacked data.  
-\item The number of traces per shot gather is Figure~\ref{fig:smask}. The first shot gather, 1687, has one trace, then the number of traces per gather increases to a maximum of 69 at gather 1735 and keeps constant through gather 1965. After gather 1965, the number of traces per gather decreases to 1 at the last gather, 2012. There are missing traces at some shot-gathers, for example at gather 1707 (Figure~\ref{fig:shot}). The average frequency spectra of shot gathers is Figure~\ref{fig:spectra}. Our data has low frequencies smaller than 10 Hz that need to be filtered. We later followed the example of the published dataset to resample the file from 2 ms to 4 ms sample interval to reduce our prestack processing load by half. The Nyquist frequency of 4 ms sample interval is 125 Hz. Typical seismic data has good high frequency content up to around 50-70 Hz, above this are usually noise. Therefore, we filtered high frequencies above 125 Hz to prevent aliasing and remove noise.    
+
+\item The data were collected by the University of Texas, the University of Tulsa, and the University of Tokyo. The original data is in SU, so we converted it to RSF files. The processed dataset was published in \cite{Moore}. Field data were sorted into 16.66-m bins in eastern area and 8.33-m bins in western areas.   
+
+\item There are two data files: shot-ordered gathers (Figure~\ref{fig:shots}) and published stacked data (Figure~\ref{fig:stackd}). The data were collected in very deep water, approximately 6 seconds two-way travel time, which is 4.5 km if the water velocity is 1500 m/s. The shot-gather data has 326 shot gathers with 19057 traces. The total time length of a trace is 11 seconds with a sample interval of 0.002 seconds. The published stacked data has 2250 traces with total time length of 11 seconds and 0.004 seconds sample interval. The shot-gathers data has 401 CMPs while the stacked data is the output of 2869 CMPs. Therefore, the shot-gather file is a subset of stacked data.  
+
+\item The number of traces per shot gather is Figure~\ref{fig:smask}. The first shot gather, 1687, has one trace, then the number of traces per gather increases to a maximum of 69 at gather 1735 and keeps constant through gather 1965. After gather 1965, the number of traces per gather decreases to 1 at the last gather, 2012. There are missing traces at some shot gathers, for example at gather 1707 (Figure~\ref{fig:shot}). The average frequency spectra of shot gathers is Figure~\ref{fig:spectra}. Our data has low frequencies smaller than 10 Hz that need to be filtered. We later followed the example of the published dataset \cite[]{Moore} to resample the file from 2 ms to 4 ms sample interval to reduce our prestack processing load by half. The Nyquist frequency of 4 ms sample interval is 125 Hz. Typical seismic data has good high frequency content up to around 50-70 Hz, above this are usually noise. Therefore, we filtered high frequencies above 125 Hz to prevent aliasing and remove noise.    
 
 \plot{stackd}{width=0.8\textwidth}{Published stacked data.}  
 \plot{smask}{width=0.8\textwidth}{Number of traces per shot-gather.}  
-\plot{shot}{width=0.8\textwidth}{Shot-gather 1707.}
+\plot{shot}{width=0.8\textwidth}{Shot-gather 1707.} 
 
-\end{enumerate}
+\end{enumerate}\clearpage
 
-\section{Surface-consistent}
+\section{Surface-consistent amplitude balancing}
 
 \begin{enumerate}
 
-\item The first step is to do surface-consistent amplitude balancing. Typical seismic instruments introduce significant dirrect current (DC) offset that is effectively added to the desired signal from the sensor. We removed DC offset from the shot gathers data to facilitate processing and analysis of data (Figure~\ref{fig:shotsdc}). We then filtered the low frequency in the data (Figure~\ref{fig:shotsf}).
+\item The first step is to do surface-consistent amplitude balancing. Typical seismic instruments introduce significant direct current (DC) offset that is effectively added to the desired signal from the sensor. We removed DC offset from the shot gathers data to facilitate processing and analysis of data (Figure~\ref{fig:shotsdc}). We then filtered the low frequencies and high frequencies in the data (Figure~\ref{fig:shotsf}).
 
-\item We created a mask to remove zero traces and calculated trace amplitudes of the shot gathers displayed in shot-offset coordinates (Figure~\ref{fig:varms}). The stripes in the amplitude might be caused by near-surface conditions in deploying sources and receivers. The horizontal stripes come from offset term (Figure~\ref{fig:off}). The vertical stripes come from shot term (Figure~\ref{fig:sht}). The diagonal stripes come from the CMP and receiver terms (Figure~\ref{fig:rcv} and Figure~\ref{fig:cmp}). After running iterative inversion, the stripes are predicted (Figure~\ref{fig:recvvscarms}. The shot gathers after the surface-consistent amplitude correction is the right figure in Figure~\ref{fig:shotsfc}.          
+\item We created a mask to remove zero traces and calculated trace amplitudes of the shot gathers displayed in shot-offset coordinates (Figure~\ref{fig:varms}). The stripes in the amplitude might be caused by near-surface conditions in deploying sources and receivers. The horizontal stripes come from the offset term (Figure~\ref{fig:off}). The vertical stripes come from the shot term (Figure~\ref{fig:sht}). The diagonal stripes come from the CMP and receiver terms (Figure~\ref{fig:rcv} and Figure~\ref{fig:cmp}). The surface-consistent model \cite[]{GEO46-01-00170022} tries to explain the trace amplitude using a product of source, receiver, offset, and midpoint factors. After running iterative inversion using the least-squares method and the conjugate-gradient algorithm \cite[]{hestenes,fletcher}, the stripes are predicted (Figure~\ref{fig:recvvscarms}). The shot gathers after the surface-consistent amplitude correction are the right figure in Figure~\ref{fig:shotsfc}.          
 
-\multiplot{3}{shots,shotsdc,shotsf}{width=0.5\textwidth}{(a) Raw shot gathers (b) Shot gathers after DC removal. (c) Shot gathers after filtering low frequencies.}  
-\multiplot{2}{spectra,spectraf}{width=0.8\textwidth}{(a) Raw data frequency spectra. (b) Frequency spectra after filtering low frequencies.}
+\multiplot{3}{shots,shotsdc,shotsf}{width=0.5\textwidth}{(a) Raw shot gathers (b) Shot gathers after DC removal. (c) Shot gathers after filtering low and high frequencies.}  
+\multiplot{2}{spectra,spectraf}{width=0.8\textwidth}{(a) Raw data frequency spectra. (b) Frequency spectra after filtering low and high frequencies.}
 \multiplot{4}{off,sht,rcv,cmp}{width=0.45\textwidth}{Estimated surface-consistent factors.} 
 \multiplot{3}{varms,recvvscarms,recvadiff}{width=0.3\textwidth}{Trace amplitudes from the data. (a) Initial. (b) Estimated surface-consistent. (c) Difference.}
 \plot{shotsfc}{width=0.8\textwidth}{(a) Raw shot gathers (b) Shot gathers after surface-consistent amplitude correction.}
 
-\end{enumerate}
+\end{enumerate}\clearpage
 
 \section{CMP sorting}
 
 \begin{enumerate}
 
-\item The data was resampled to 4 ms sample interval and applied spherical divergence correction (Figure~\ref{fig:shots2}). We then sorted the data to CMP (Figure~\ref{fig:cmps}). The fold values of data is Figure~\ref{fig:cmask}. We have 401 CMPs but the first CMPs are not full fold. The first full-fold CMP gather is CMP 933 with 48 traces.
+\item The shot gathers are resampled to 4 ms sample interval and applied spherical divergence correction (Figure~\ref{fig:shots2}). We then sorted the data to CMP (Figure~\ref{fig:cmps}). The fold values of data is Figure~\ref{fig:cmask}. We have 401 CMPs but the first CMPs are not full fold. The first full-fold CMP gather is CMP 933 with 48 traces.
 
 \plot{shots2}{width=0.8\textwidth}{Shot gathers after resampling.}
 \plot{cmps}{width=0.8\textwidth}{CMP gathers.}
 \plot{cmask}{width=0.8\textwidth}{Fold values of data.}    
  
-\end{enumerate}
+\end{enumerate}\clearpage
 
-\section{Velocity analysis, NMO, and stack}
+\section{Velocity analysis, NMO, DMO, and stack}
 
 \begin{enumerate}
 
-\item We examined CMP gather 1280 (Figure~\ref{fig:cmp1}). We did velocity analysis using semblance scan and automatically pick the velocity (Figure~\ref{fig:vscan}). We then applied NMO to flatten the events (Figure~\ref{fig:nmo1}).   
+\item We examined CMP gather 1280 (Figure~\ref{fig:cmp1}). We did velocity analysis using semblance scan and automatically picked the velocity (Figure~\ref{fig:vscan}). We then applied NMO using picked velocity to flatten the events (Figure~\ref{fig:nmo1}).   
 
 \plot{cmp1}{width=0.8\textwidth}{CMP 1280.}
 \plot{vscan}{width=0.8\textwidth}{Velocity analysis for CMP 1280.}
@@ -74,22 +87,123 @@ In the final project, we process a 2D seismic line collected near the coast of J
 \plot{nmos}{width=0.8\textwidth}{CMP gathers after NMO.}
 \multiplot{2}{stack,stack-shot}{width=0.8\textwidth}{(a) Stacked data. (b) Published stacked data.}
 
-\item We also tried DMO to correct for dips. We created a constant-velocity stack with 60 velocities starting from 1400 m/s and spacing interval of 20 m/s (Figure~\ref{fig:stacks}). We applied Fowler's method to transform the stack volume into the frequency-wavenumber domain and apply the velocity mapping (Figure~\ref{fig:map}). The result after applying Fowler's method is Figure~\ref{fig:dmo}. We then picked the DMO-corrected velocity automatically from the envelope (Figure~\ref{fig:vpick}). After the velocity was picked, we generated a DMO stack by slicing through the veolocity cube (Figure~\ref{fig:slice}). We examined CMP 380 to evaluate the velocity picking and to observe the change brought by DMO (Figure~\ref{fig:envelope}).      
+\item We also tried DMO to correct for dips. We created a constant-velocity stack with 60 velocities starting from 1400 m/s and spacing interval of 20 m/s (Figure~\ref{fig:stacks}). We applied Fowler's method \cite[]{Fowler.sepphd.58} to transform the stack volume into the frequency-wavenumber domain and applied the velocity mapping (Figure~\ref{fig:map}). The result after applying Fowler's method is Figure~\ref{fig:dmo}. We then picked the DMO-corrected velocity automatically from the envelope (Figure~\ref{fig:vpick}). After the velocity was picked, we generated a DMO stack by slicing through the velocity cube (Figure~\ref{fig:slice}). We examined CMP 1280 where there is a dipping event to evaluate the velocity picking and to observe the change brought by DMO (Figure~\ref{fig:envelope}). The velocity is corrected in the shallow layers to account for the dips. The picked velocity is smoother and increases with depth. We extracted a small window of DMO stack and normal stack for comparison (Figure~\ref{fig:zoomd}). The events in DMO stack are clearer than in normal stack.       
 
 \plot{stacks}{width=0.8\textwidth}{NMO stack with an ensemble of constant velocities.}
 \sideplot{map}{width=\textwidth}{Fourier-domain velocity map used in Fowler's DMO method.}
 \plot{dmo}{width=0.8\textwidth}{Nankai dataset after DMO stacking with an ensemble of constant velocities.}
 \plot{vpick}{width=0.8\textwidth}{Migration velocity picked automatically from DMO stacks.}
 \plot{slice}{width=0.8\textwidth}{DMO stack generated by slicing the constant-velocity stacks.}
-\sideplot{envelope}{width=\textwidth}{Comparison of velocity analysis before and after DMO at a selected CMP location.}
+\sideplot{envelope}{width=\textwidth}{Comparison of velocity analysis (a) before and (b) after DMO at a selected CMP location.}
+\sideplot{zoomd}{width=\textwidth}{(a) Windowed DMO stack (b) Windowed normal stack.}
 
-\end{enumerate}
+\end{enumerate}\clearpage
 
 \section{Migration}
 
+\subsection{Stolt migration}
 
+\begin{enumerate}
+ 
+\item We used Stolt migration based on the Fourier transform \cite[]{GEO50-11-22192244}. We first mapped from $\omega$ to $\omega_0$ in frequency-wavenumber domain (Figure~\ref{fig:map2}). The 2-D cosine transform of the data before and after Stolt mapping is Figure~\ref{fig:cosft,cosft2}. The data after Stolt migration with constant velocity 1500 m/s is Figure~\ref{fig:mig2}. The diffractions are not imaged properly because of wrong velocity (Middle figure in Figure~\ref{fig:zoom1}, Figure~\ref{fig:zoom4}, Figure~\ref{fig:zoom7}). 
 
+\item We tried a more realistic velocity distribution starting with 1500 m/s (water velocity) at the surface and increasing quadratically with vertical time (Figure~\ref{fig:vmig}). We first migrated the data with a number of constant velocities in the range from 1500 to 2452 m/s with the spacing interval of 8 m/s. We then sliced through this ensemble of migrations to create an image (Figure~\ref{fig:migd}) \cite[]{GEO57-01-00510059}. The diffractions are imaged better but still need to be improved by improving the migration velocity (Right figure in Figure~\ref{fig:zoom1}, Figure~\ref{fig:zoom4}, Figure~\ref{fig:zoom7}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}), the diffractions are more collapsed and the events are clearer.
+
+\plot{map2}{width=0.8\textwidth}{Stolt map.}
+\multiplot{2}{cosft,cosft2}{width=0.45\textwidth}{Nankai stack in the Cosine transform domain before (a) and after (b) Stolt migration with velocity 1500 m/s.}
+\plot{mig2}{width=\textwidth}{Nankai stack Stolt migrated with velocity of 1500 m/s.}
+\plot{vmig}{width=0.8\textwidth}{Velocity distribution.}
+\plot{migd}{width=0.8\textwidth}{Nankai stack Stolt migrated with velocity increasing with time.}
+
+\end{enumerate}\clearpage
+
+\subsection{Gazdag migration}
+
+\begin{enumerate}
+
+\item To corretly image the diffractions, we used the picked velocities in DMO for phase-shift migration also known as Gazdag migration \cite[]{GEO43-07-13421351}. We used Dix conversion to calculate the interval velocities in time (Figure~\ref{fig:vdix2}). Stolt migration with constant velocity 1550 m/s images the water bottom clearly (Figure~\ref{fig:mig1}) so the water velocity is about 1550 m/s. We set the velocity above 5.5 seconds to 1550 m/s and kept the dix velocities below 5.5 seconds (Figure~\ref{fig:vmigr}). We then applied phase-shift migration in time coordinate to get the image (Figure~\ref{fig:image}). The diffractions are clearly imaged (Right figure in Figure~\ref{fig:zoom2}, Figure~\ref{fig:zoom5}, Figure~\ref{fig:zoom8}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}), the diffractions at ocean bottom are collapsed and the events are clearer.
+
+\plot{vdix2}{width=0.8\textwidth}{Dix velocity in time.}
+\plot{mig1}{width=0.8\textwidth}{Stolt migration with constant velocity 1550 m/s.}
+\plot{vmigr}{width=0.8\textwidth}{Migration velocity in time.}
+\plot{image}{width=0.8\textwidth}{Gazdag migration.}
+
+\end{enumerate}\clearpage
+
+\subsection{Velocity continuation}
+
+\begin{enumerate}
+
+\item In order to have correct migration velocity, we used the velocity continuation method proposed by \cite[]{VCZO} to do the time migration velocity analysis. We first used Stolt migration with constant velocity 1400 m/s (Figure~\ref{fig:first}). We then used velocity continuation with 101 velocities starting with 1400 m and spacing interval of 10 m/s (Figure~\ref{fig:velcon}). We then sliced through this velocity continuation volume using stacking velocity to create a migration image (Figure~\ref{fig:mstack}). Migrating with stacking velocities is still not sufficient to correctly image the diffractions (Left figure in Figure~\ref{fig:zoom2}, Figure~\ref{fig:zoom5}, Figure~\ref{fig:zoom8}).  
+
+\item In order to have more focused velocity to image the diffractions correctly, we used plane-wave destruction \cite[]{PWD} to estimate the dip of reflections and diffractions (Figure~\ref{fig:dip}). We then separated reflections from diffractions (Figure~\ref{fig:refl}). The diffractions are in Figure~\ref{fig:diff}. We then used velocity continuation to analyze time migration diffraction velocity (Figure~\ref{fig:velcond}). The focusing velocity was picked (Figure~\ref{fig:fpik}). The diffractions are focused (Figure~\ref{fig:mdif}). Nankai stack migration with focusing velocity is Figure~\ref{fig:mfpik}. Focusing velocities improve the quality of migrated image (Middle figure in Figure~\ref{fig:zoom2}, Figure~\ref{fig:zoom5}, Figure~\ref{fig:zoom8}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}), the diffractions at ocean bottom are collapsed and the events are clearer.       
+
+\plot{first}{width=0.8\textwidth}{Stolt migration with velocity 1400 m/s.}
+\plot{velcon}{width=0.8\textwidth}{Velocity continuation.}
+\plot{mstack}{width=0.8\textwidth}{Migration with the stacking velocity.}
+\plot{dip}{width=0.8\textwidth}{Estimated dips.}
+\plot{refl}{width=0.8\textwidth}{Reflections.}
+\plot{diff}{width=0.8\textwidth}{Diffractions.}
+\plot{velcond}{width=0.8\textwidth}{Velocity continuation with diffractions.}
+\plot{fpik}{width=0.8\textwidth}{Focusing velocity.}
+\plot{mdif}{width=0.8\textwidth}{Focused diffractions.}
+\plot{mfpik}{width=0.8\textwidth}{Migration with focusing velocity.}
+
+\end{enumerate}\clearpage
+
+\begin{comment}
+\subsection{Kirchhoff post-stack time migration}
+
+\begin{enumerate}
+
+\item We used Kirchhoff post-stack time migration to migrate the data (Figure~\ref{fig:kmig}).
+
+\plot{kmig}{width=0.8\textwidth}{Kirchhoff post-stack time migration.} 
+
+\end{enumerate}
+\end{comment}
+
+\subsection{Reverse-time migration}
+
+\begin{enumerate}
+
+\item In order to account for laterally variations in velocity, we used reverse-time migration by the lowrank approximation \cite[]{lowrank}. We converted the time-migration velocity to depth for creating an intitial velocity model for depth migration (Figure~\ref{fig:vdixz}). We used reverse-time migration to migrate the data (Figure~\ref{fig:rtm}). Because there are not much laterally variations in velocity so there are few improvements in RTM image (Left figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}), the diffractions at ocean bottom are collapsed and the events are clearer and more continuous.          
+
+\plot{vdixz}{width=0.8\textwidth}{Dix velocity in depth.} 
+\plot{rtm}{width=0.8\textwidth}{Reverse-time migration.}
+
+\end{enumerate}\clearpage
+
+\subsection{Split-step migration}
+
+\begin{enumerate}
+
+\item In order to account for laterally variations in velocity, we used split-step migration \cite[]{splitstep}. We calculated slowness from the depth-migration velocity (Figure~\ref{fig:slo}). We then used the split-step migration to migrate the data (Figure~\ref{fig:mig}). Because there are not much laterally variations in velocity so there are few improvements in Split-step image (Second left figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}), the diffractions at ocean bottom are collapsed and the events are clearer and more continuous.     
+
+\plot{slo}{width=0.8\textwidth}{Slowness.}
+\plot{mig}{width=0.8\textwidth}{Split-step migration.}       
+\multiplot{3}{zoom1,zoom2,zoom3}{width=\textwidth}{Migration comparison (a1) DMO stack (a2) Stolt migration with constant velocity 1500 m/s (a3) Stolt migration with variable velocity (b4) Migration with stacking velocity (b5) Migration with focusing velocity (b6) Gazdag migration (c7) Reverse-time migration (c8) Split-step migration (c9) Post-stack Kirchhoff time migration (c0) Published stacked and migrated data.}
+\multiplot{3}{zoom4,zoom5,zoom6}{width=\textwidth}{Migration comparison (a1) DMO stack (a2) Stolt migration with constant velocity 1500 m/s (a3) Stolt migration with variable velocity (b4) Migration with stacking velocity (b5) Migration with focusing velocity (b6) Gazdag migration (c7) Reverse-time migration (c8) Split-step migration (c9) Post-stack Kirchhoff time migration (c0) Published stacked and migrated data.}
+\multiplot{3}{zoom7,zoom8,zoom9}{width=\textwidth}{Migration comparison (a1) DMO stack (a2) Stolt migration with constant velocity 1500 m/s (a3) Stolt migration with variable velocity (b4) Migration with stacking velocity (b5) Migration with focusing velocity (b6) Gazdag migration (c7) Reverse-time migration (c8) Split-step migration (c9) Post-stack Kirchhoff time migration (c0) Published stacked and migrated data.}
+
+\end{enumerate}\clearpage
+
+\section{Interpretations}
+
+\begin{enumerate}
+
+\item Oceanic crust of the Pacific Plate lies under sediments at the left side of Figure~\ref{fig:stackd}, and is subducted at the trench, which is filled with recent sediments (CDPs 200-600, approximately). On the right of these flat-lying sediments, there is an accretionary prism with distorted sediment layer thickens to the right, which results in interesting topography. 
+
+\item The reflector, which is about 300 ms later, mimic the ocean-bottom topography and cuts across the folded sediments, is called the bottom-simulating reflector \cite[]{SU}. It reflects a change in fluid phases.  
+
+\item The Shikoku Basin sequence in our 2D seismic line has two units. A lower 400-m-thick transparent unit lies directly on oceanic basement and is overlain by a 500-m-thick layered unit. The boundary of the protothrust zone is marked by the first major thrust fault which uplifts trench sediments in a ramp anticline. Thrust ramps are developed farther landward, forming a series of parallel linear structural terraces.
+
+\item The decollement is within the Shikoku Basin sedimentray section. The decollement is the Pacific Plate oceanic crust at about 7.2 seconds. It appears to be flatten. The thrusts are imaged as a fault plane reflection and has an overlying fault-bend fold.   
+
+\end{enumerate}
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=project/SConstruct]{project/SConstruct}
 \bibliographystyle{seg}
-\bibliography{SEG}
+\bibliography{SEG,paper,SEP2}
 
 
