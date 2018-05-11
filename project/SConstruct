@@ -20,33 +20,74 @@ Flow('shots tshots','Nshots.su',
 	''')
 
 Result('spectra','shots',
-       'spectra all=y |  scale axis=1 | graph title="Average Spectra"')
-Result('shots','window min1=5.5 max1=8.5 | grey title="Raw shot gathers"')
+       '''
+       spectra all=y |  scale axis=1 | 
+       graph title="Average Spectra" label1=Amplitude
+       ''')
+Result('shots',
+       '''
+       window min1=5.5 max1=8.5 | 
+       grey title="Raw shot gathers"
+       ''')
 
 Fetch('Nstack.su','nankai')
 
-Flow('stackd tstackd','Nstack.su','suread suxdr=y tfile=${TARGETS[1]}')
+Flow('stackd tstackd','Nstack.su',
+     '''
+     suread suxdr=y tfile=${TARGETS[1]}
+     ''')
 Flow('stack-win','stackd','window min1=5')
-
+Flow('stack-shot','stack-win',
+     '''
+     window min2=900 max2=1300 | put label2=CMP
+     ''')
 Plot('stackd','window j1=2 j2=2 | grey title=Stack label2=CMP')
-Plot('stack-win','window  j2=2 | grey title="Stack (Window)" label2=CMP')
-Plot('stack-shot','stack-win','window min2=900 max2=1300 | grey title="Part of stack corresponding to the shot file" label2=CMP') 
-Result('stack-shot','stack-win','window min2=900 max2=1300 | grey title="Part of stack corresponding to the shot file" label2=CMP') 
+Plot('stack-win',
+     '''
+     window  j2=2 | grey title="Stack (Window)" label2=CMP
+     ''')
+Plot('stack-shot','stack-win',
+     '''
+     window min2=900 max2=1300 | 
+     grey title="Part of stack corresponding to the shot file" 
+     label2=CMP
+     ''') 
+Result('stack-shot','stack-win',
+       '''
+       window min2=900 max2=1300 | 
+       grey title="Part of stack corresponding to the shot file" 
+       label2=CMP
+       ''') 
 Result('stackd','stackd stack-win','SideBySideAniso')
 
 ####### DC Removal
 
-Flow('mean','shots','stack axis=1 | spray axis=1 n=5500 o=0.0 d=0.002')
+Flow('mean','shots',
+     '''
+     stack axis=1 | spray axis=1 n=5500 o=0.0 d=0.002
+     ''')
 
 Flow('shotsdc','shots mean','add scale=1,-1 ${SOURCES[1]}')
-Result('shotsdc','window min1=5.5 max1=8.5 | grey title="Shot gathers after removing DC offset"')
+Result('shotsdc',
+       '''
+       window min1=5.5 max1=8.5 | 
+       grey title="Shot gathers after removing DC offset"
+       ''')
 
 ####### Bandpass Filtering
 
 Flow('shotsf','shotsdc','bandpass flo=10 fhi=125')
-Result('shotsf','window min1=5.5 max1=8.5 | grey title="Shot gathers after filtering low frequencies"')
+Result('shotsf',
+       '''
+       window min1=5.5 max1=8.5 | 
+       grey title="Shot gathers after filtering low and high frequencies"
+       ''')
 Result('spectraf','shotsf',
-       'spectra all=y |  scale axis=1 | graph title="Average Spectra after removing low frequencies"')
+       '''
+       spectra all=y |  scale axis=1 | 
+       graph title="Spectra after removing low and high frequencies"
+       label1=Amplitude
+       ''')
 
 ####### Mask zero traces
 
@@ -67,32 +108,46 @@ Result('arms','grey title=Log-Amplitude mean=y pclip=90')
 
 Flow('indexshot','tshots0','window n1=1 f1=2')
 
-Flow('offsets4index','tshots0',' headermath output=offset | dd type=float | window')
+Flow('offsets4index','tshots0',
+     ''' 
+     headermath output=offset | dd type=float | window
+     ''')
 
-Flow('offsetindex','offsets4index','math output="abs(input) - 170" | dd type=int')
+Flow('offsetindex','offsets4index',
+     '''
+     math output="abs(input) - 170" | dd type=int
+     ''')
 
 # receiver/midpoint
 
 Flow('midpoint','tshots0','window n1=1 f1=5')
 
-Flow('cmps4index','tshots0',' headermath output=cdp | dd type=float | math output="input*16.667" | window')
+Flow('cmps4index','tshots0',
+     ''' 
+     headermath output=cdp | dd type=float | 
+     math output="input*16.667" | window
+     ''')
 
-Flow('recv','cmps4index offsets4index','add scale=1,0.5 ${SOURCES[1]} | math output="input - 13799" | dd type=int')
+Flow('recv','cmps4index offsets4index',
+     '''
+     add scale=1,0.5 ${SOURCES[1]} | 
+     math output="input - 13799" | dd type=int
+     ''')
 
 Flow('index','indexshot offsetindex',
-        '''
-        cat axis=2 ${SOURCES[1]}
-        ''')
+     '''
+     cat axis=2 ${SOURCES[1]}
+     ''')
 
 Flow('extindex','index midpoint',
-        '''
-        cat axis=2 ${SOURCES[1]}
-        ''')
+     '''
+     cat axis=2 ${SOURCES[1]}
+     ''')
 
 Flow('extindrecv','extindex recv',
-        '''
-        cat axis=2 ${SOURCES[1]}
-        ''')
+     '''
+     cat axis=2 ${SOURCES[1]}
+     ''')
 
 def plot(title):
     return '''
@@ -111,7 +166,11 @@ def plotb(title,bias=-5):
     ''' % (title,bias)
 
 # Display in shot/offset coordinates
-Flow('varms','arms tshots0','spray axis=1 n=1 | intbin head=${SOURCES[1]} yk=fldr xk=tracf | window')
+Flow('varms','arms tshots0',
+     '''
+     spray axis=1 n=1 | 
+     intbin head=${SOURCES[1]} yk=fldr xk=tracf | window
+     ''')
 Result('varms','arms tshots0',plotb('Log-Amplitude'))
 
 prog = Program('surface-consistent.c')
@@ -155,16 +214,24 @@ for case in ('sht','off','rcv','cmp'):
            ''' % (n1,f1,case.capitalize(),case.capitalize()))
     f1 += n1
 
-### apply to traces to all times - no windowing is considered
+### apply to traces to all times 
 
 Flow('ampl','recvscarms',
      'math output="exp(-input/2)" | spray axis=1 n=5500 d=0.002 o=0')
 
 Flow('shots-preproc','shots0 ampl','mul ${SOURCES[1]}')
 
-Plot('shots-preproc','shots-preproc','window n2=100 | grey min1=6.0 max1=8.0 title="Shots Preproc"')
+Plot('shots-preproc','shots-preproc',
+     '''
+     window n2=100 | 
+     grey min1=6.0 max1=8.0 title="Shots Preproc"
+     ''')
 
-Plot('shots-raw','shots0','window n2=100 | grey min1=6.0 max1=8.0 title="Shots Raw"')
+Plot('shots-raw','shots0',
+     '''
+     window n2=100 | 
+     grey min1=6.0 max1=8.0 title="Shots Raw"
+     ''')
 
 Result('shotsfc','shots-raw shots-preproc','SideBySideAniso')
 
@@ -188,7 +255,8 @@ Flow('shots2','subsamples tshots0',
         ''')
 Result('shots2',
        '''
-       window min1=5.5 max1=9 | byte gainpanel=all | transp plane=23 memsize=5000 |
+       window min1=5.5 max1=9 | byte gainpanel=all | 
+       transp plane=23 memsize=5000 |
        grey3 frame1=300 frame2=100 frame3=50 
        point1=0.8 point2=0.8 clip=8.66
        title="Shots" label3="Shots" 
@@ -240,7 +308,11 @@ Result('shot','shot offset',
        title="Shot 1707" label2=Offset
        ''')
 
-Plot('shot',' window min1=5.8 max1=8.5 | grey title="Selected Shot" clip=2')
+Plot('shot',
+     ''' 
+     window min1=5.8 max1=8.5 | 
+     grey title="Selected Shot" clip=2
+     ''')
 
 
 # Extract CMPs and apply t^2 gain
@@ -393,7 +465,7 @@ Result('nmos',
         '''
         window min1=5.5 max1=8.5 |
 	    byte gainpanel=all | transp plane=23 memsize=5000 |
-        grey3 frame1=400 frame2=50 frame3=200 
+        grey3 frame1=400 frame2=50 frame3=50 
 	    title="NMO" label2="CMP Number"
         flat=n point1=0.8 point2=0.8
 	    ''')
@@ -426,7 +498,8 @@ Flow('stackst','stacks','costaper nw3=20')
 
 Result('stacks','stackst',
        '''
-       window min1=5.5 max1=8.5 |byte gainpanel=all | transp plane=23 memsize=5000 |
+       window min1=5.5 max1=8.5 |byte gainpanel=all | 
+       transp plane=23 memsize=5000 |
        grey3 frame1=200 frame2=100 frame3=50 point1=0.8 point2=0.8
        title="Constant-Velocity Stacks" label3=Velocity unit3=m/s
        label2="CMP Number"
@@ -456,7 +529,7 @@ Result('map',
        window j3=4 |
        byte gainpanel=all allpos=y bar=bar.rsf | 
        grey3 title="Fowler Map" label1=Velocity 
-       unit1=km/s label3=Wavenumber barlabel=Velocity barunit=km/s
+       unit1=m/s label3=Wavenumber barlabel=Velocity barunit=m/s
        frame1=20 frame2=500 frame3=20 color=x scalebar=y 
        ''')
         
@@ -493,7 +566,8 @@ Flow('vpick','envelope',
 Result('vpick',
        '''
        put d2=1 o2=900 unit2= label2="CMP Number" |
-       grey mean=y color=j scalebar=y barreverse=y barunit=m/s
+       grey mean=y color=j scalebar=y 
+       barreverse=y barunit=m/s barlabel=Velocity
        title="Picked Migration Velocity" label2="CMP Number" unit2= 
        ''')
 
@@ -521,8 +595,8 @@ Plot('slice',
 
 p = 380 
 
-min1=5.5
-max1=8.0 
+min1=5.8
+max1=8.5
 
 Flow('before','stackst',
      '''
@@ -554,6 +628,35 @@ Plot('before2','before pick','Overlay')
 Plot('after2','after vpick1','Overlay')
 Result('envelope','before2 after2','SideBySideAniso')
 
+##############################################
+# Zoom an interesting area 
+##############################################
+min1,max1=5.8,7
+min2,max2=1100,1300
+
+Flow('box.asc',None,
+     '''
+     echo %s n1=2 n2=5 data_format=ascii_float in=$TARGET
+     ''' % ' '.join(map(str,(min1,min2,max1,min2,
+                             max1,max2,min1,max2,min1,min2))))
+Plot('box','box.asc',
+     '''
+     dd form=native type=complex | window | 
+     graph transp=y yreverse=y min1=0 max1=4 min2=0 max2=26.7625 
+     wanttitle=n plotfat=5 plotcol=6 wantaxis=n
+     ''')
+    
+for i in range (2):
+    case=('slice','stack')[i]
+    zoomd = case + '-zoomd'
+    Flow(zoomd,case,
+         '''
+         window min1=%g max1=%g min2=%g max2=%g
+         ''' % (min1,max1,min2,max2))
+    Plot(zoomd,'grey title=%s grid=y gridcol=5 label2=CMP' % ('ab'[i]))
+Result('zoomd','slice-zoomd stack-zoomd',
+'SideBySideIso')
+
 # Stolt Migration 
 
 # 2D cosine transform
@@ -564,7 +667,11 @@ Flow('cosft','slice',
      cosft sign1=1 sign2=1 |  
      put label2=Wavenumber
      ''')
-Result('cosft','grey title="Cosine Transform" pclip=95')
+Result('cosft',
+       '''
+       window max1=90 | 
+       grey title="Cosine Transform" pclip=95 label1=Frequency
+       ''')
 
 # Stolt migration with constant velocity
 
@@ -576,12 +683,16 @@ Flow('map2','cosft',
 Result('map2',
        '''
        grey color=x allpos=y scalebar=y 
-       title="Stolt Map" barlabel=Frequency barunit=Hz
+       title="Stolt Map" barlabel=Frequency barunit=Hz label1=Frequency
        ''')
 
 Flow('cosft2','cosft map2','iwarp warp=${SOURCES[1]} inv=n')
     
-Result('cosft2','grey title="Cosine Transform Warped" pclip=95')
+Result('cosft2',
+       '''
+       window max1=90 | 
+       grey title="Cosine Transform Warped" pclip=95 label1=Frequency
+       ''')
 
 Flow('mig2','cosft2',
      '''
@@ -592,30 +703,89 @@ Flow('mig2','cosft2',
 
 Result('mig2',
        '''
-	window min1=5.5 max1=8.5 | 
-	grey title="Stolt Migration with 1500 m/s" 
-	label2="CMP Number" 
-	''')
+       window min1=5.5 max1=8.5 | 
+       grey title="Stolt Migration with 1500 m/s" 
+       label2="CMP Number" 
+       ''')
+
+# Ensemble of Stolt migrations with different velocities
+
+Flow('spray','cosft',
+     'spray axis=3 n=120 o=1500 d=8 label=Velocity unit=m/s')
+
+Flow('map1','spray','math output="sqrt(x1*x1+0.25*x3*x3*x2*x2)" ')
+
+Result('map1',
+       '''
+       byte gainpanel=all allpos=y | 
+       grey3 title="Stolt Ensemble Map" 
+       frame1=400 frame2=50 frame3=50 color=x
+       ''')
+
+Flow('migd','spray map1',
+     '''
+     iwarp warp=${SOURCES[1]} inv=n | 
+     cosft sign1=-1 sign2=-1 
+     ''')
+
+Flow('migt','migd','transp plane=23 memsize=5000')
+
+Plot('migd',
+     '''
+     window min1=5.5 max1=8.5 | 
+     grey title="Ensemble of Stolt Migrations" 
+     ''',view=1)
+
+# Migration velocity increasing with time 
+
+Flow('vmig1','slice',
+     '''
+     pad beg1=1250 | math output="1500" | 
+     window n1=1250 | put o1=0
+     ''')
+
+Flow('vmig2','slice',
+     '''
+     window min1=5 | put o1=0 | 
+     math output="1500+20*x1*x1" | put o1=5 
+     ''')
+
+Flow('vmig','vmig1 vmig2','cat ${SOURCES[1:2]} axis=1')
+
+Result('vmig',
+       '''
+       window min1=5.5 max1=8.5 | 
+       grey color=j mean=y barreverse=y title="Migration Velocity" 
+       scalebar=y barlabel=Velocity barunit=m/s label2="CMP Number" 
+       unit2=
+       ''')
+# Slice through the ensemble of migrations
+
+Flow('slice1','migt vmig',
+     '''
+     slice pick=${SOURCES[1]} | put d2=1 o2=900
+     ''')
+
+Result('migd','slice1',
+       '''
+       window min1=5.5 max1=8.5 | 
+       grey label2="CMP Number" 
+       unit2= title="Stolt Migration with Variable Velocity" 
+       ''')
 
 # Dix conversion to interval velocity
 Flow('semb','vscans picks','slice pick=${SOURCES[1]}')
-Flow('vdix','picks semb','dix weight=${SOURCES[1]} rect1=50 rect2=10')	
-
-# Stolt Stretch
-Flow('cosfts','slice',
+Flow('vdix','picks semb',
      '''
-     put d2=16.667 label2=Distance unit2=m | 
-     cosft sign2=1 |  
-     put label2=Wavenumber
+     dix weight=${SOURCES[1]} rect1=50 rect2=10
      ''')
-
 
 # Velocity continuation
 Flow('first','slice',
      '''
      put o2=0 d2=16.667 label2=Distance unit2=m o3=0 |
      cosft sign2=1 |
-     stolt vel=1500 
+     stolt vel=1400 
      ''')
 
 Flow('mig0','first',
@@ -626,12 +796,12 @@ Flow('mig0','first',
 
 Result('first','mig0',
        '''
-       grey title="Migration with 1500 m/s"
+       grey title="Migration with 1400 m/s"
        ''')
 
 Flow('velcon','first',
      '''
-     vczo nv=101 dv=10 v0=1500 verb=y |
+     vczo nv=101 dv=10 v0=1400 verb=y |
      window min1=5.5 max1=8.0 | 
      transp plane=23 memsize=1000 |
      cosft sign2=-1
@@ -660,14 +830,21 @@ Result('mstack',
 Flow('dip','mig0','dip rect1=20 rect2=10 order=2')
 Result('dip',
        '''
-       grey color=j scalebar=y wanttitle=n barlabel=Slope barunit=samples
+       grey color=j scalebar=y wanttitle=n 
+       barlabel=Slope barunit=samples
        ''')
 
-Flow('refl','mig0 dip','pwspray dip=${SOURCES[1]} ns=5 order=2 reduce=stack')
-Result('refl','window min1=5.5 max1=8 | grey title="Reflections" ')
+Flow('refl','mig0 dip',
+     '''
+     pwspray dip=${SOURCES[1]} ns=5 order=2 reduce=stack
+     ''')
+Result('refl',
+       '''
+       window min1=5.5 max1=8 | grey title="Reflections" 
+       ''')
 
 Flow('diff','mig0 refl','add scale=1,-1 ${SOURCES[1]}')
-Result('diff','window min1=5.5 max1=8 | grey title="Diffractions" ')
+Result('diff','window min1=5.5 max1=8 | grey title="Diffractions"')
 
 Flow('stoltd','diff',
      '''
@@ -677,12 +854,19 @@ Flow('stoltd','diff',
 
 Flow('velcond','stoltd',
      '''
-     vczo nv=101 dv=10 v0=1500 verb=y pad2=3000 |
+     vczo nv=101 dv=10 v0=1400 verb=y pad2=3000 |
      window min1=5.5 max1=8 | 
      transp plane=23 memsize=1000 |
      cosft sign2=-1
      ''')
 Plot('velcond','grey title="Velocity Continuation"',view=1)
+Result('velcond',
+       '''
+       byte gainpanel=a | 
+       grey3 frame1=300 frame2=200 frame3=50 
+       point1=0.8 point2=0.8 flat=n unit3=m/s
+       title="Velocity Continuation"
+       ''')
 
 Flow('focus','velcond',
      '''
@@ -695,12 +879,13 @@ Flow('focus','velcond',
      scale axis=2
      ''')
 
-Flow('fpik','focus','pick v0=1500 rect1=25 rect2=10')
+Flow('fpik','focus','pick v0=1400 rect1=25 rect2=10')
 
 Result('fpik',
        '''
-       window | grey color=j allpos=y bias=1500 scalebar=y title="Focusing Velocity"
-       label2=CMP barreverse=y barlabel=Velocity barunit=m/s
+       window | grey color=j allpos=y bias=1500 
+       scalebar=y title="Focusing Velocity"
+       barreverse=y barlabel=Velocity barunit=m/s
        ''')
 
 Flow('mdif','velcond fpik',
@@ -719,50 +904,90 @@ Flow('mfpik','velcon fpik',
 Result('mfpik',
        'grey title="Migration with Focusing Velocity"')
 
-##############################################
-# Zoom an interesting area 
-##############################################
-min1,max1=6.0,6.8 
-min2,max2=950,1050
-    
-for i in range (2):
-    case=('slice','mig2')[i]
-    zoom = case + '-zoom'
-    Flow(zoom,case,
-         '''
-         window min1=%g max1=%g min2=%g max2=%g
-         ''' % (min1,max1,min2,max2))
-    Plot(zoom,'grey title=%s grid=y gridcol=5' % ('ab'[i]))
-for i in range (2):
-    case=('mstack','mfpik')[i]
-    zoom2 = case + '-zoom'
-    Flow(zoom2,case,
-         '''
-         put d2=1 o2=900 | window min1=%g max1=%g min2=%g max2=%g
-         ''' % (min1,max1,min2,max2))
-    Plot(zoom2,'grey title=%s grid=y gridcol=5' % ('cd'[i]))
-Result('zoom','slice-zoom mig2-zoom mstack-zoom mfpik-zoom','SideBySideIso')
-
 # RTM
 # Dix conversion to interval velocity
-Flow('mig1','first',
-     ''' 
+Flow('first1','slice',
+     '''
+     put o2=0 d2=16.667 label2=Distance unit2=m o3=0 |
+     cosft sign2=1 |
+     stolt vel=1550 
+     ''')
+
+Flow('mig1','first1',
+     '''
+     
      cosft sign2=-1
      ''')
+
 Result('mig1',
        '''
-       window max1=8.5 min1=5.5 | grey title="Migration with 1500 m/s"
+       window min1=5.5 max1=8.5 | 
+       grey title="Migration with 1550 m/s"
        ''')
 Flow('weight','envelope vpick','slice pick=${SOURCES[1]}')
 Flow('vdix2','vpick weight',
      'dix rect1=20 rect2=50 weight=${SOURCES[1]}')
+Result('vdix2',
+       '''
+       
+       grey color=j mean=y barreverse=y 
+       title="Dix Velocity in time" 
+       scalebar=y barlabel=Velocity 
+       barunit=m/s label2="Distance" unit2=m
+       ''')
+Flow('vmigr1','slice',
+     '''
+     pad beg1=1375 | math output="1550" | 
+     window n1=1375 | put o1=0 d2=16.667 o2=0
+     ''')
+Flow('vmigr2','vdix2','window min1=5.5')
+Flow('vmigr','vmigr1 vmigr2','cat ${SOURCES[1:2]} axis=1')
 
-Flow('vdixz','vdix2',
+Result('vmigr',
+       '''
+       
+       grey color=j mean=y barreverse=y 
+       title="Migration Velocity in time" 
+       scalebar=y barlabel=Velocity 
+       barunit=m/s label2="Distance" unit2=m
+       ''')
+
+# Gazdag migration
+Flow('gazdag','cosft vmigr',
+     'cosft sign1=-1 | gazdag velocity=${SOURCES[1]} verb=y')
+
+Flow('image','gazdag','cosft sign2=-1')
+
+Result('image',
+       '''
+       window max1=8.5 min1=5.5 | grey 
+       title="Phase-Shift Migration" 
+       ''')
+
+# Kirchhoff time migration
+Flow('kmig','slice vpick',
+     '''
+     put d2=16.667 o2=0 | kirchnew velocity=${SOURCES[1]}
+     ''')
+Result('kmig',
+       '''
+       window max1=8.5 min1=5.5 | grey 
+       title="Kirchhoff Post-stack Migration" 
+       ''')
+
+Flow('vdixz','vmigr',
      '''
      time2depth velocity=$SOURCE intime=y nz=2750 z0=0 dz=5 | 
-     put label1=Depth unit1=km
+     put label1=Depth unit1=m
      ''')
-
+Result('vdixz',
+       '''
+       
+       grey color=j mean=y barreverse=y 
+       title="Dix Velocity in depth" 
+       scalebar=y barlabel=Velocity 
+       barunit=m/s label2="Distance" unit2=m
+       ''')
 Flow('fft','vdixz','transp | fft1 | fft3 axis=2 pad=1')
 Flow('right left','vdixz fft',
      '''
@@ -775,27 +1000,38 @@ Flow('rtm snaps','slice left right',
      '''
      put o2=0 d2=16.667 | spline n1=5500 o1=0 d1=0.002 |
      reverse which=1 |
-     transp |
-     fftexp0 mig=y snap=10 snaps=${TARGETS[1]}
+     transp | fftexp0 mig=y snap=10 snaps=${TARGETS[1]}
      left=${SOURCES[1]} right=${SOURCES[2]}
      nz=2750 dz=5  
      ''')
 
 Result('rtm',
        '''
-       put d2=1 o2=900 | window min1=4000 max1=7000 |
-       grey title="Post-Stack Depth Migration" unit2=km
+       put d2=1 o2=900 unit1=m label1=Depth 
+       unit2= label2=CMP | window min1=4000 max1=7000 |
+       grey title="Post-Stack Depth Migration" 
        ''')
-
-Plot('snaps','grey title=Snapshots gainpanel=all unit2=km',view=1)
+Plot('snaps','grey title=Snapshots gainpanel=all unit2=m',view=1)
 
 # Split-step
-Flow('slo','vdixz','put d4=1 o4=1 d2=0.016667 d1=0.005 d3=0.016667 | transp | transp plane=23 | math output="1/(input/1000)"')
+Flow('slo','vdixz',
+     '''
+     put d4=1 o4=1 d2=0.016667 d1=0.005 d3=0.016667 | 
+     transp | transp plane=23 | 
+     math output="1/(input/1000)"
+     ''')
 Result('slo',
        '''
-       byte | sfgrey3 color=j frame1=150 frame2=150 frame3=150 flat=n title="Slowness"
+       put label1=Distance unit1=km label2= 
+       unit2= unit3=km | byte | 
+       sfgrey3 color=j frame1=150 frame2=150 frame3=150 
+       flat=n title="Slowness"
        ''')
-Flow('fft2','slice','put d2=0.016667 o2=0 d3=0.016667 | fft1 | transp plane=12 | transp plane=23')
+Flow('fft2','slice',
+     '''
+     put d2=0.016667 o2=0 d3=0.016667 | fft1 | 
+     transp plane=12 | transp plane=23
+     ''')
 Flow('mig','fft2 slo',
      '''
      zomig3 ompnth=1 mode=m --readwrite=y verb=y
@@ -804,8 +1040,154 @@ Flow('mig','fft2 slo',
 
 Result('mig',
        '''
-       put d1=1 o1=900 d3=5 | transp plane=23 | transp plane=12 | window min1=4000 max1=7000 | grey
+       put d1=1 o1=900 d3=5 d2=16.667 unit3=m 
+       label3=Depth unit1= label1=CMP | 
+       transp plane=23 | transp plane=12 | 
+       window min1=4000 max1=7000 | grey
        title="Split-step migration" 
+       ''')
+
+##############################################
+# Zoom an interesting area 
+##############################################
+min1,max1=6.0,6.8 
+min2,max2=950,1050
+    
+for i in range (3):
+    case=('slice','mig2','slice1')[i]
+    zoom = case + '-zoom'
+    Flow(zoom,case,
+         '''
+         window min1=%g max1=%g min2=%g max2=%g 
+         ''' % (min1,max1,min2,max2))
+    Plot(zoom,'grey title=%s grid=y gridcol=9 label2=CMP unit2='%('123'[i]))
+for i in range (5):
+    case=('mstack','mfpik','image','stack-shot','kmig')[i]
+    zoom2 = case + '-zoom'
+    Flow(zoom2,case,
+         '''
+         put d2=1 o2=900 | window min1=%g max1=%g min2=%g max2=%g
+         ''' % (min1,max1,min2,max2))
+    Plot(zoom2,
+        '''
+        grey title=%s grid=y gridcol=9 
+        label2=CMP unit2=
+        ''' % ('45609'[i]))
+Plot('mig-zoom','mig',
+     '''
+     put d1=1 o1=900 d3=5 d2=16.667 
+     unit3=m label3=Depth unit1= label1=CMP | 
+     transp plane=23 | transp plane=12 | 
+     window min1=4730 max1=5550 min2=950 max2=1050 | 
+     grey title="%s" grid=y gridcol=9
+     ''' % ('8'))
+Plot('rtm-zoom','rtm',
+     '''
+     put d2=1 o2=900 unit1=m label1=Depth unit2= label2=CMP | 
+     window min1=4730 max1=5550 min2=950 max2=1050 | 
+     grey title="%s" grid=y gridcol=9
+     ''' % ('7'))
+Result('zoom1','slice-zoom mig2-zoom slice1-zoom','SideBySideIso')
+Result('zoom2','mstack-zoom mfpik-zoom image-zoom','SideBySideIso')
+Result('zoom3','rtm-zoom mig-zoom kmig-zoom stack-shot-zoom',
+       '''
+       SideBySideIso
+       ''')
+
+##############################################
+# Zoom an interesting area 
+##############################################
+min1,max1=5.9,6.8 
+min2,max2=950,1200
+    
+for i in range (3):
+    case=('slice','mig2','slice1')[i]
+    zoom = case + '-zoom2'
+    Flow(zoom,case,
+         '''
+         window min1=%g max1=%g min2=%g max2=%g 
+         ''' % (min1,max1,min2,max2))
+    Plot(zoom,'grey title=%s grid=y gridcol=9 label2=CMP unit2='%('123'[i]))
+for i in range (5):
+    case=('mstack','mfpik','image','stack-shot','kmig')[i]
+    zoom2 = case + '-zoom2'
+    Flow(zoom2,case,
+         '''
+         put d2=1 o2=900 | window min1=%g max1=%g min2=%g max2=%g
+         ''' % (min1,max1,min2,max2))
+    Plot(zoom2,
+         '''
+         grey title=%s grid=y gridcol=9 
+         label2=CMP unit2=
+         ''' % ('45609'[i]))
+Plot('mig-zoom2','mig',
+     '''
+     put d1=1 o1=900 d3=5 d2=16.667 unit3=m 
+     label3=Depth unit1= label1=CMP | 
+     transp plane=23 | transp plane=12 | 
+     window min1=4600 max1=5550 min2=950 max2=1200 | 
+     grey title="%s" grid=y gridcol=9
+     ''' % ('8'))
+Plot('rtm-zoom2','rtm',
+     '''
+     put d2=1 o2=900 unit1=m label1=Depth unit2= label2=CMP | 
+     window min1=4600 max1=5550 min2=950 max2=1200 | 
+     grey title="%s" grid=y gridcol=9
+     ''' % ('7'))
+Result('zoom4','slice-zoom2 mig2-zoom2 slice1-zoom2','SideBySideIso')
+Result('zoom5','mstack-zoom2 mfpik-zoom2 image-zoom2','SideBySideIso')
+Result('zoom6','rtm-zoom2 mig-zoom2 kmig-zoom2 stack-shot-zoom2',
+       '''
+       SideBySideIso
+       ''')
+
+##############################################
+# Zoom an interesting area 
+##############################################
+min1,max1=5.9,6.8 
+min2,max2=1150,1250
+    
+for i in range (3):
+    case=('slice','mig2','slice1')[i]
+    zoom = case + '-zoom3'
+    Flow(zoom,case,
+         '''
+         window min1=%g max1=%g min2=%g max2=%g 
+         ''' % (min1,max1,min2,max2))
+    Plot(zoom,
+         '''
+         grey title=%s grid=y gridcol=9 label2=CMP unit2=
+         ''' % ('123'[i]))
+for i in range (5):
+    case=('mstack','mfpik','image','stack-shot','kmig')[i]
+    zoom2 = case + '-zoom3'
+    Flow(zoom2,case,
+         '''
+         put d2=1 o2=900 | window min1=%g max1=%g min2=%g max2=%g
+         ''' % (min1,max1,min2,max2))
+    Plot(zoom2,
+         '''
+         grey title=%s grid=y gridcol=9 label2=CMP unit2=
+         ''' % ('45609'[i]))
+Plot('mig-zoom3','mig',
+     '''
+     put d1=1 o1=900 d3=5 d2=16.667 unit3=m 
+     label3=Depth unit1= label1=CMP | 
+     transp plane=23 | transp plane=12 | 
+     window min1=4600 max1=5550 min2=1150 max2=1250 | 
+     grey title="%s" grid=y gridcol=9
+     ''' % ('8'))
+Plot('rtm-zoom3','rtm',
+     '''
+     put d2=1 o2=900 unit1=m label1=Depth unit2= 
+     label2=CMP | window min1=4600 max1=5550 
+     min2=1150 max2=1250 | grey title="%s" grid=y gridcol=9
+     ''' % ('7'))
+Result('zoom7','slice-zoom3 mig2-zoom3 slice1-zoom3','SideBySideIso')
+Result('zoom8','mstack-zoom3 mfpik-zoom3 image-zoom3','SideBySideIso')
+Result('zoom9','rtm-zoom3 mig-zoom3 kmig-zoom3 stack-shot-zoom3',
+       '''
+       SideBySideIso
        ''')
 
 End()
