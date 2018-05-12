@@ -1090,9 +1090,7 @@ Plot('rtm-zoom','rtm',
 Result('zoom1','slice-zoom mig2-zoom slice1-zoom','SideBySideIso')
 Result('zoom2','mstack-zoom mfpik-zoom image-zoom','SideBySideIso')
 Result('zoom3','rtm-zoom mig-zoom kmig-zoom stack-shot-zoom',
-       '''
-       SideBySideIso
-       ''')
+       'SideBySideIso')
 
 ##############################################
 # Zoom an interesting area 
@@ -1137,9 +1135,7 @@ Plot('rtm-zoom2','rtm',
 Result('zoom4','slice-zoom2 mig2-zoom2 slice1-zoom2','SideBySideIso')
 Result('zoom5','mstack-zoom2 mfpik-zoom2 image-zoom2','SideBySideIso')
 Result('zoom6','rtm-zoom2 mig-zoom2 kmig-zoom2 stack-shot-zoom2',
-       '''
-       SideBySideIso
-       ''')
+       'SideBySideIso')
 
 ##############################################
 # Zoom an interesting area 
@@ -1186,8 +1182,6 @@ Plot('rtm-zoom3','rtm',
 Result('zoom7','slice-zoom3 mig2-zoom3 slice1-zoom3','SideBySideIso')
 Result('zoom8','mstack-zoom3 mfpik-zoom3 image-zoom3','SideBySideIso')
 Result('zoom9','rtm-zoom3 mig-zoom3 kmig-zoom3 stack-shot-zoom3',
-       '''
-       SideBySideIso
-       ''')
+       'SideBySideIso')
 
 End()
