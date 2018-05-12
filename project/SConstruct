@@ -80,7 +80,7 @@ Flow('shotsf','shotsdc','bandpass flo=10 fhi=125')
 Result('shotsf',
        '''
        window min1=5.5 max1=8.5 | 
-       grey title="Shot gathers after filtering low and high frequencies"
+       grey title="Shot gathers after filtering frequencies"
        ''')
 Result('spectraf','shotsf',
        '''
