@@ -717,9 +717,9 @@ Flow('map1','spray','math output="sqrt(x1*x1+0.25*x3*x3*x2*x2)" ')
 
 Result('map1',
        '''
-       byte gainpanel=all allpos=y | 
-       grey3 title="Stolt Ensemble Map" 
-       frame1=400 frame2=50 frame3=50 color=x
+       byte gainpanel=all allpos=y bar=bar1.rsf | 
+       grey3 title="Stolt Ensemble Map" scalebar=y barlabel=Velocity barunit=m/s  
+       frame1=400 frame2=50 frame3=50 color=x label1=Frequency
        ''')
 
 Flow('migd','spray map1',
