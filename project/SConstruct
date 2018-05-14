@@ -22,7 +22,7 @@ Flow('shots tshots','Nshots.su',
 Result('spectra','shots',
        '''
        spectra all=y |  scale axis=1 | 
-       graph title="Average Spectra" label1=Amplitude
+       graph title="Average Spectra" label1=Frequency label2=Amplitude
        ''')
 Result('shots',
        '''
@@ -86,7 +86,7 @@ Result('spectraf','shotsf',
        '''
        spectra all=y |  scale axis=1 | 
        graph title="Spectra after removing low and high frequencies"
-       label1=Amplitude
+       label1=Frequency label2=Amplitude
        ''')
 
 ####### Mask zero traces
