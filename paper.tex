@@ -8,6 +8,18 @@ In the final project, we processed a deep water 2D seismic line collected near t
   
 \end{abstract}
 
+\section{Assigned tasks}
+
+\begin{enumerate}
+
+\item Conrad summarized the geology and data acquisition of the dataset. He did some interpretations on the published stacked data. He checked the data to see if there are something wrong.
+
+\item Nam processed the data from surface-consistent amplitude balancing, CMP sorting, gain, spherical divergence correction, velocity analysis, NMO, DMO, stack, and migration.
+
+\item The final migrated image is interpreted by Nam and Conrad. We put all the stuffs in the presentation and report. 
+
+\end{enumerate}
+
 \section{Data overview}
 \inputdir{project}
 
@@ -31,7 +43,7 @@ In the final project, we processed a deep water 2D seismic line collected near t
 
 \begin{enumerate}
 
-\item The data were collected by the University of Texas, the University of Tulsa, and the University of Tokyo. The original data is in SU, so we converted it to RSF files. The processed dataset was published in \cite{Moore}. Field data were sorted into 16.66-m bins.   
+\item The data were collected by the University of Texas and the University of Tokyo. The original data is in SU, so we converted it to RSF files. The processed dataset was published in \cite{Moore}. Field data were sorted into 16.66-m bins.   
 
 \item There are two data files: shot-ordered gathers (Figure~\ref{fig:shots}) and published stacked data (Figure~\ref{fig:stackd}). The data were collected in very deep water, approximately 6 seconds two-way travel time, which is 4.5 km if the water velocity is 1500 m/s. The shot-gather data has 326 shot gathers with 19057 traces. The total time length of a trace is 11 seconds with a sample interval of 0.002 seconds. The published stacked data has 2250 traces with total time length of 9 seconds and 0.004 seconds sample interval. The shot-gather data has 401 CMPs while the stacked data is the output of 2869 CMPs. Therefore, the shot-gather file is a subset of stacked data.  
 
@@ -105,9 +117,9 @@ In the final project, we processed a deep water 2D seismic line collected near t
 
 \begin{enumerate}
  
-\item We used Stolt migration based on the Fourier transform \cite[]{GEO50-11-22192244}. We first mapped from $\omega$ to $\omega_0$ in frequency-wavenumber domain (Figure~\ref{fig:map2}). The 2-D cosine transform of the data before and after Stolt mapping is Figure~\ref{fig:cosft,cosft2}. The data after Stolt migration with constant velocity 1500 m/s is Figure~\ref{fig:mig2}. The diffractions are not imaged properly because of wrong velocity (Middle figure in Figure~\ref{fig:zoom1}, Figure~\ref{fig:zoom4}, Figure~\ref{fig:zoom7}). 
+\item We used Stolt migration based on the Fourier transform \cite[]{GEO50-11-22192244}. We first mapped from $\omega$ to $\omega_0$ in frequency-wavenumber domain (Figure~\ref{fig:map2}). The 2-D cosine transform of the data before and after Stolt mapping is Figure~\ref{fig:cosft,cosft2}. The data after Stolt migration with constant velocity 1500 m/s is Figure~\ref{fig:mig2}. The diffractions are not imaged properly because of wrong velocity (Middle figure in Figure~\ref{fig:zoom1}, Figure~\ref{fig:zoom4}, Figure~\ref{fig:zoom7}, Figure~\ref{fig:zoom10}). 
 
-\item We tried a more realistic velocity distribution starting with 1500 m/s (water velocity) at the surface and increasing quadratically with vertical time (Figure~\ref{fig:vmig}). We first migrated the data with a number of constant velocities in the range from 1500 to 2452 m/s with the spacing interval of 8 m/s (Figure~\ref{fig:map1}). We then sliced through this ensemble of migrations to create an image (Figure~\ref{fig:migd}) \cite[]{GEO57-01-00510059}. The diffractions are imaged better but still need to be improved by improving the migration velocity (Right figure in Figure~\ref{fig:zoom1}, Figure~\ref{fig:zoom4}, Figure~\ref{fig:zoom7}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}), the diffractions are more collapsed and the events are clearer.
+\item We tried a more realistic velocity distribution starting with 1500 m/s (water velocity) at the surface and increasing quadratically with vertical time (Figure~\ref{fig:vmig}). We first migrated the data with a number of constant velocities in the range from 1500 to 2452 m/s with the spacing interval of 8 m/s (Figure~\ref{fig:map1}). We then sliced through this ensemble of migrations to create an image (Figure~\ref{fig:migd}) \cite[]{GEO57-01-00510059}. The diffractions are imaged better but still need to be improved by improving the migration velocity (Right figure in Figure~\ref{fig:zoom1}, Figure~\ref{fig:zoom4}, Figure~\ref{fig:zoom7}, Figure~\ref{fig:zoom10}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}, Figure~\ref{fig:zoom12}), the diffractions are more collapsed and the events are clearer.
 
 \plot{map2}{width=0.8\textwidth}{Stolt map.}
 \multiplot{2}{cosft,cosft2}{width=0.45\textwidth}{Nankai stack in the Cosine transform domain before (a) and after (b) Stolt migration with velocity 1500 m/s.}
@@ -122,7 +134,7 @@ In the final project, we processed a deep water 2D seismic line collected near t
 
 \begin{enumerate}
 
-\item To corretly image the diffractions, we used the picked velocities in DMO for phase-shift migration also known as Gazdag migration \cite[]{GEO43-07-13421351}. We used Dix conversion to calculate the interval velocities in time (Figure~\ref{fig:vdix2}). Stolt migration with constant velocity 1550 m/s images the water bottom clearly (Figure~\ref{fig:mig1}) so the water velocity is about 1550 m/s. We set the velocity above 5.5 seconds to 1550 m/s and kept the dix velocities below 5.5 seconds (Figure~\ref{fig:vmigr}). We then applied phase-shift migration in time coordinate to get the image (Figure~\ref{fig:image}). The diffractions are clearly imaged (Right figure in Figure~\ref{fig:zoom2}, Figure~\ref{fig:zoom5}, Figure~\ref{fig:zoom8}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}), the diffractions at ocean bottom are collapsed and the events are clearer.
+\item To corretly image the diffractions, we used the picked velocities in DMO for phase-shift migration also known as Gazdag migration \cite[]{GEO43-07-13421351}. We used Dix conversion to calculate the interval velocities in time (Figure~\ref{fig:vdix2}). Stolt migration with constant velocity 1550 m/s images the water bottom clearly (Figure~\ref{fig:mig1}) so the water velocity is about 1550 m/s. We set the velocity above 5.5 seconds to 1550 m/s and kept the dix velocities below 5.5 seconds (Figure~\ref{fig:vmigr}). We then applied phase-shift migration in time coordinate to get the image (Figure~\ref{fig:image}). The diffractions are clearly imaged (Right figure in Figure~\ref{fig:zoom2}, Figure~\ref{fig:zoom5}, Figure~\ref{fig:zoom8}, Figure~\ref{fig:zoom11}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}, Figure~\ref{fig:zoom12}), the diffractions at ocean bottom are collapsed and the events are clearer.
 
 \plot{vdix2}{width=0.8\textwidth}{Dix velocity in time.}
 \plot{mig1}{width=0.8\textwidth}{Stolt migration with constant velocity 1550 m/s.}
@@ -135,9 +147,9 @@ In the final project, we processed a deep water 2D seismic line collected near t
 
 \begin{enumerate}
 
-\item In order to have correct migration velocity, we used the velocity continuation method proposed by \cite[]{VCZO} to do the time migration velocity analysis. We first used Stolt migration with constant velocity 1400 m/s (Figure~\ref{fig:first}). We then used velocity continuation with 101 velocities starting with 1400 m and spacing interval of 10 m/s (Figure~\ref{fig:velcon}). We then sliced through this velocity continuation volume using stacking velocity to create a migration image (Figure~\ref{fig:mstack}). Migrating with stacking velocities is still not sufficient to correctly image the diffractions (Left figure in Figure~\ref{fig:zoom2}, Figure~\ref{fig:zoom5}, Figure~\ref{fig:zoom8}).  
+\item In order to have correct migration velocity, we used the velocity continuation method proposed by \cite[]{VCZO} to do the time migration velocity analysis. We first used Stolt migration with constant velocity 1400 m/s (Figure~\ref{fig:first}). We then used velocity continuation with 101 velocities starting with 1400 m and spacing interval of 10 m/s (Figure~\ref{fig:velcon}). We then sliced through this velocity continuation volume using stacking velocity to create a migration image (Figure~\ref{fig:mstack}). Migrating with stacking velocities is still not sufficient to correctly image the diffractions (Left figure in Figure~\ref{fig:zoom2}, Figure~\ref{fig:zoom5}, Figure~\ref{fig:zoom8}, Figure~\ref{fig:zoom11}).  
 
-\item In order to have more focused velocity to image the diffractions correctly, we used plane-wave destruction \cite[]{PWD} to estimate the dip of reflections and diffractions (Figure~\ref{fig:dip}). We then separated reflections from diffractions (Figure~\ref{fig:refl}). The diffractions are in Figure~\ref{fig:diff}. We then used velocity continuation to analyze time migration diffraction velocity (Figure~\ref{fig:velcond}). The focusing velocity was picked (Figure~\ref{fig:fpik}). The diffractions are focused (Figure~\ref{fig:mdif}). Nankai stack migration with focusing velocity is Figure~\ref{fig:mfpik}. Focusing velocities improve the quality of migrated image (Middle figure in Figure~\ref{fig:zoom2}, Figure~\ref{fig:zoom5}, Figure~\ref{fig:zoom8}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}), the diffractions at ocean bottom are collapsed and the events are clearer.       
+\item In order to have more focused velocity to image the diffractions correctly, we used plane-wave destruction \cite[]{PWD} to estimate the dip of reflections and diffractions (Figure~\ref{fig:dip}). We then separated reflections from diffractions (Figure~\ref{fig:refl}). The diffractions are in Figure~\ref{fig:diff}. We then used velocity continuation to analyze time migration diffraction velocity (Figure~\ref{fig:velcond}). The focusing velocity was picked (Figure~\ref{fig:fpik}). The diffractions are focused (Figure~\ref{fig:mdif}). Nankai stack migration with focusing velocity is Figure~\ref{fig:mfpik}. Focusing velocities improve the quality of migrated image (Middle figure in Figure~\ref{fig:zoom2}, Figure~\ref{fig:zoom5}, Figure~\ref{fig:zoom8}, Figure~\ref{fig:zoom11}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}, Figure~\ref{fig:zoom12}), the diffractions at ocean bottom are collapsed and the events are clearer.       
 
 \plot{first}{width=0.8\textwidth}{Stolt migration with velocity 1400 m/s.}
 \plot{velcon}{width=0.8\textwidth}{Velocity continuation.}
@@ -168,7 +180,7 @@ In the final project, we processed a deep water 2D seismic line collected near t
 
 \begin{enumerate}
 
-\item In order to account for laterally variations in velocity, we used reverse-time migration by the lowrank approximation \cite[]{lowrank}. We converted the time-migration velocity to depth for creating an intitial velocity model for depth migration (Figure~\ref{fig:vdixz}). We used reverse-time migration to migrate the data (Figure~\ref{fig:rtm}). Because there are not much laterally variations in velocity so there are few improvements in RTM image (Left figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}), the diffractions at ocean bottom are collapsed and the events are clearer and more continuous.          
+\item In order to account for laterally variations in velocity, we used reverse-time migration by the lowrank approximation \cite[]{lowrank}. We converted the time-migration velocity to depth for depth-migration initial velocity model (Figure~\ref{fig:vdixz}). We used reverse-time migration to migrate the data (Figure~\ref{fig:rtm}). Because there are not much laterally variations in velocity so there are few improvements in RTM image (Left figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}, Figure~\ref{fig:zoom12}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}, Figure~\ref{fig:zoom12}), the diffractions at ocean bottom are collapsed and the events are clearer and more continuous.          
 
 \plot{vdixz}{width=0.8\textwidth}{Dix velocity in depth.} 
 \plot{rtm}{width=0.8\textwidth}{Reverse-time migration.}
@@ -179,21 +191,22 @@ In the final project, we processed a deep water 2D seismic line collected near t
 
 \begin{enumerate}
 
-\item In order to account for laterally variations in velocity, we used split-step migration \cite[]{splitstep}. We calculated slowness from the depth-migration velocity (Figure~\ref{fig:slo}). We then used the split-step migration to migrate the data (Figure~\ref{fig:mig}). Because there are not much laterally variations in velocity so there are few improvements in Split-step image (Second left figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}), the diffractions at ocean bottom are collapsed and the events are clearer and more continuous.     
+\item In order to account for laterally variations in velocity, we used split-step migration \cite[]{splitstep}. We calculated slowness from the depth-migration velocity (Figure~\ref{fig:slo}). We then used the split-step migration to migrate the data (Figure~\ref{fig:mig}). Because there are not much laterally variations in velocity so there are few improvements in Split-step image (Second left figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}, Figure~\ref{fig:zoom12}). Comparing with the published stacked and migrated data (Right figure in Figure~\ref{fig:zoom3}, Figure~\ref{fig:zoom6}, Figure~\ref{fig:zoom9}, Figure~\ref{fig:zoom12}), the diffractions at ocean bottom are collapsed and the events are clearer and more continuous.     
 
 \plot{slo}{width=0.8\textwidth}{Slowness.}
 \plot{mig}{width=0.8\textwidth}{Split-step migration.}       
 \multiplot{3}{zoom1,zoom2,zoom3}{width=\textwidth}{Migration comparison (a1) DMO stack (a2) Stolt migration with constant velocity 1500 m/s (a3) Stolt migration with variable velocity (b4) Migration with stacking velocity (b5) Migration with focusing velocity (b6) Gazdag migration (c7) Reverse-time migration (c8) Split-step migration (c9) Post-stack Kirchhoff time migration (c0) Published stacked and migrated data.}
 \multiplot{3}{zoom4,zoom5,zoom6}{width=\textwidth}{Migration comparison (a1) DMO stack (a2) Stolt migration with constant velocity 1500 m/s (a3) Stolt migration with variable velocity (b4) Migration with stacking velocity (b5) Migration with focusing velocity (b6) Gazdag migration (c7) Reverse-time migration (c8) Split-step migration (c9) Post-stack Kirchhoff time migration (c0) Published stacked and migrated data.}
 \multiplot{3}{zoom7,zoom8,zoom9}{width=\textwidth}{Migration comparison (a1) DMO stack (a2) Stolt migration with constant velocity 1500 m/s (a3) Stolt migration with variable velocity (b4) Migration with stacking velocity (b5) Migration with focusing velocity (b6) Gazdag migration (c7) Reverse-time migration (c8) Split-step migration (c9) Post-stack Kirchhoff time migration (c0) Published stacked and migrated data.}
+\multiplot{3}{zoom10,zoom11,zoom12}{width=\textwidth}{Migration comparison (a1) DMO stack (a2) Stolt migration with constant velocity 1500 m/s (a3) Stolt migration with variable velocity (b4) Migration with stacking velocity (b5) Migration with focusing velocity (b6) Gazdag migration (c7) Reverse-time migration (c8) Split-step migration (c9) Post-stack Kirchhoff time migration (c0) Published stacked and migrated data.}
 
 \end{enumerate}\clearpage
 
-\section{Interpretations}
+\section{Interpretations} 
 
 \begin{enumerate}
 
-\item Our processing result has improvements on imaging the diffractions. Based on the final processing output, we can have some geologic interpretations. 
+\item Our processing result has improvements on imaging the diffractions. Based on the final processing output, we can have some geologic interpretations (Figure~\ref{fig:inter}). 
 
 \item Oceanic crust of the Pacific Plate lies under sediments at the left side of Figure~\ref{fig:stackd}, and is subducted at the trench, which is filled with recent sediments (CDPs 200-600, approximately). On the right of these flat-lying sediments, there is an accretionary prism with distorted sediment layer thickens to the right, which results in interesting topography. 
 
@@ -201,9 +214,11 @@ In the final project, we processed a deep water 2D seismic line collected near t
 
 \item The Shikoku Basin sequence in our 2D seismic line has two units. A lower 400-m-thick transparent unit lies directly on oceanic basement and is overlain by a 500-m-thick layered unit. The boundary of the protothrust zone is marked by the first major thrust fault which uplifts trench sediments in a ramp anticline. Thrust ramps are developed farther landward, forming a series of parallel linear structural terraces.
 
-\item The decollement is within the Shikoku Basin sedimentray section. The decollement is the Pacific Plate oceanic crust at about 7.2 seconds. It appears to be flatten. The thrusts are imaged as a fault plane reflection and has an overlying fault-bend fold.   
+\item The decollement is within the Shikoku Basin sedimentary section. The decollement is the Pacific Plate oceanic crust at about 7.2 seconds. It appears to be flatten. The thrusts are imaged as a fault plane reflection and has overlying fault-bend folds.
 
-\end{enumerate}
+\plot{inter}{width=0.8\textwidth}{Interpretations.}   
+
+\end{enumerate}\clearpage
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=project/SConstruct]{project/SConstruct}
 \bibliographystyle{seg}
