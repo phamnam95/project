@@ -1184,4 +1184,51 @@ Result('zoom8','mstack-zoom3 mfpik-zoom3 image-zoom3','SideBySideIso')
 Result('zoom9','rtm-zoom3 mig-zoom3 kmig-zoom3 stack-shot-zoom3',
        'SideBySideIso')
 
+##############################################
+# Zoom an interesting area 
+##############################################
+min1,max1=7.3,7.6 
+min2,max2=1000,1300
+    
+for i in range (3):
+    case=('slice','mig2','slice1')[i]
+    zoom = case + '-zoom4'
+    Flow(zoom,case,
+         '''
+         window min1=%g max1=%g min2=%g max2=%g 
+         ''' % (min1,max1,min2,max2))
+    Plot(zoom,
+         '''
+         grey title=%s grid=y gridcol=9 label2=CMP unit2=
+         ''' % ('123'[i]))
+for i in range (5):
+    case=('mstack','mfpik','image','stack-shot','kmig')[i]
+    zoom2 = case + '-zoom4'
+    Flow(zoom2,case,
+         '''
+         put d2=1 o2=900 | window min1=%g max1=%g min2=%g max2=%g
+         ''' % (min1,max1,min2,max2))
+    Plot(zoom2,
+         '''
+         grey title=%s grid=y gridcol=9 label2=CMP unit2=
+         ''' % ('45609'[i]))
+Plot('mig-zoom4','mig',
+     '''
+     put d1=1 o1=900 d3=5 d2=16.667 unit3=m 
+     label3=Depth unit1= label1=CMP | 
+     transp plane=23 | transp plane=12 | 
+     window min1=6200 max1=6700 min2=1000 max2=1300 | 
+     grey title="%s" grid=y gridcol=9
+     ''' % ('8'))
+Plot('rtm-zoom4','rtm',
+     '''
+     put d2=1 o2=900 unit1=m label1=Depth unit2= 
+     label2=CMP | window min1=6200 max1=6700 
+     min2=1000 max2=1300 | grey title="%s" grid=y gridcol=9
+     ''' % ('7'))
+Result('zoom10','slice-zoom4 mig2-zoom4 slice1-zoom4','SideBySideIso')
+Result('zoom11','mstack-zoom4 mfpik-zoom4 image-zoom4','SideBySideIso')
+Result('zoom12','rtm-zoom4 mig-zoom4 kmig-zoom4 stack-shot-zoom4',
+       'SideBySideIso')
+
 End()
